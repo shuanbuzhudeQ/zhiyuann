@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纸怨——天台</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        /* ==================== 场景特有样式 ==================== */
+        /* 震动动画 - 天台页面特有 */
+        @keyframes strongShake {
+            0% { transform: translateX(0) translateY(0); }
+            10% { transform: translateX(-5px) translateY(-5px); }
+            20% { transform: translateX(5px) translateY(5px); }
+            30% { transform: translateX(-5px) translateY(-5px); }
+            40% { transform: translateX(5px) translateY(5px); }
+            50% { transform: translateX(-5px) translateY(-5px); }
+            60% { transform: translateX(5px) translateY(5px); }
+            70% { transform: translateX(-5px) translateY(-5px); }
+            80% { transform: translateX(5px) translateY(5px); }
+            90% { transform: translateX(-3px) translateY(3px); }
+            100% { transform: translateX(0) translateY(0); }
+        }
+        
+        .scene.shaking {
+            animation: strongShake 0.5s ease-in-out;
+        }
+        
+        /* ==================== 对话框修复样式 ==================== */
+        /* 场景容器样式调整 */
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 人物立绘容器 */
+        .character-avatar-container {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 70%;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        /* 人物立绘 */
+        .character-avatar-img {
+            position: absolute;
+            bottom: 0;
+            max-height: 100%;
+            max-width: 60%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+        }
+        
+        /* 人物立绘在左侧 */
+        .character-left {
+            left: 5%;
+        }
+        
+        /* 人物立绘在右侧 */
+        .character-right {
+            right: 5%;
+        }
+        
+        /* 对话框容器 */
+        .dialogue-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            pointer-events: none;
+        }
+        
+        /* 对话框 */
+        .dialogue-box {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #4ecdc4;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0 20px 20px 20px;
+            min-height: 120px;
+            max-height: 180px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* 对话框滚动条样式 */
+        .dialogue-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .dialogue-box::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .dialogue-box::-webkit-scrollbar-thumb {
+            background: #4ecdc4;
+            border-radius: 4px;
+        }
+        
+        .dialogue-box::-webkit-scrollbar-thumb:hover {
+            background: #3abbb2;
+        }
+        
+        /* 对话框标题 */
+        .dialogue-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .title-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        /* 对话框文本 */
+        .dialogue-text {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        
+        /* 对话框提示 */
+        .dialogue-hint {
+            text-align: right;
+            font-size: 14px;
+            color: #ffcc00;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        
+        /* 旁白框样式 */
+        .narration-box {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #4ecdc4;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0 20px 20px 20px;
+            min-height: 120px;
+            max-height: 180px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* 旁白框滚动条样式 */
+        .narration-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .narration-box::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .narration-box::-webkit-scrollbar-thumb {
+            background: #4ecdc4;
+            border-radius: 4px;
+        }
+        
+        .narration-box::-webkit-scrollbar-thumb:hover {
+            background: #3abbb2;
+        }
+        
+        /* 两个圆环容器 */
+        .circle-container {
+            position: absolute;
+            z-index: 35;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* ==================== 动画关键帧 ==================== */
+        /* 立绘淡入动画 */
+        @keyframes avatarFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 对话框淡入动画 */
+        @keyframes dialogueFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <a href="map.html" class="map-link">回到地图</a>
+        
+        <div class="scene-area scene-container">
+            <!-- 场景1：走廊 -->
+            <div class="scene" id="scene1">
+                <div class="scene-content">
+                    <img src="res/走廊.jpg" alt="教学楼走廊" class="scene-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="scene1-character-avatar-container"></div>
+                    
+                    <!-- 对话框容器 -->
+                    <div class="dialogue-container" id="scene1-dialogue-container">
+                        <!-- 初始旁白 -->
+                        <div class="narration-box" id="narration-box">
+                            <div class="dialogue-text" id="narration-content">
+                                教学楼矗立在夜色里，像一具被遗忘的巨兽骸骨。墙皮大片剥落，露出底下黢黑的水泥。空洞的窗框内，几缕破布无风自动——那便是先前疑似的"鬼影"。仅有的光来自二楼我们旧教室的方向，几盏残灯苟延残喘，光线昏黄粘稠，反而衬得黑暗更深。<br><br>推开门，一股混合着霉变、尘土与陈腐的气息扑面而来。
+                                你下意识地掩了掩鼻子，你难得没做好表情管理，心里嫌弃死了这糟糕的环境，白瞎自己穿的这身漂亮裙子。
+                            </div>
+                            <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 物品栏 -->
+                    <div class="inventory-area" id="inventory-area">
+                        <div class="inventory-placeholder">物品栏</div>
+                    </div>
+                    
+                    <!-- 右上角切换箭头 -->
+                    <a href="#scene2" class="scene-link" onclick="switchToScene2AndStart()"></a>
+                </div>
+            </div>
+
+            <!-- 场景2：楼梯 -->
+            <div class="scene" id="scene2">
+                <div class="scene-content">
+                    <img src="res/走廊2.jpg" alt="楼梯间" class="scene-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="scene2-character-avatar-container"></div>
+                    
+                    <!-- 对话框容器 -->
+                    <div class="dialogue-container" id="scene2-dialogue-container"></div>
+                    
+                    <!-- 物品栏 -->
+                    <div class="inventory-area" id="inventory-area2">
+                        <div class="inventory-placeholder">物品栏</div>
+                    </div>
+                    
+                    <!-- 右上角切换箭头 -->
+                    <a href="#scene3" class="scene-link" onclick="switchToScene3AndStart()"></a>
+                </div>
+            </div>
+
+            <!-- 场景3：天台 -->
+            <div class="scene" id="scene3">
+                <div class="scene-content">
+                    <img src="res/roof.jpg" alt="天台" class="scene-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="scene3-character-avatar-container"></div>
+                    
+                    <!-- 对话框容器 -->
+                    <div class="dialogue-container" id="scene3-dialogue-container"></div>
+                    
+                    <!-- 物品栏 -->
+                    <div class="inventory-area" id="inventory-area3">
+                        <div class="inventory-placeholder">物品栏</div>
+                    </div>
+                    
+                    <!-- 右上角切换箭头 -->
+                    <a href="#scene4" class="scene-link" onclick="switchToScene4AndStart()"></a>
+                </div>
+            </div>
+
+            <!-- 场景4：天台结局 -->
+            <div class="scene" id="scene4">
+                <div class="scene-content">
+                    <img src="res/roof4(1).jpg" alt="天台结局" class="scene-bg" id="scene4-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="scene4-character-avatar-container"></div>
+                    
+                    <!-- 对话框容器 -->
+                    <div class="dialogue-container" id="scene4-dialogue-container"></div>
+                    
+                    <!-- 物品栏 -->
+                    <div class="inventory-area" id="inventory-area4">
+                        <div class="inventory-placeholder">物品栏</div>
+                    </div>
+                </div>
+                
+                <!-- 两个圆环容器 -->
+                <div class="circle-container">
+                    <div class="hint-circle" id="circle-note"></div>
+                    <div class="hint-circle" id="circle-key"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 直播评论区 -->
+        <div class="live-area">
+            <div class="live-header">
+                <h3 class="live-title">直播间评论区</h3>
+                <span class="viewer-count">在线人数: <span id="viewer-count">311245</span></span>
+            </div>
+            
+            <div class="comment-area" id="comment-area">
+            </div>
+            
+            <div class="comment-input">
+                <input type="text" placeholder="发送你的评论..." id="comment-input">
+            </div>
+        </div>
+    </div>
+
+    <!-- 物品放大展示层 -->
+    <div class="item-overlay" id="item-overlay">
+        <div class="item-overlay-content">
+            <img id="overlay-item-img" src="" alt="">
+            <div class="close-item" onclick="closeItemOverlay()">
+                <img src="res/叉叉.png" alt="关闭">
+            </div>
+        </div>
+    </div>
+	
+	<audio id="suspense-bgm" src="res/悬疑bgm.MP3" loop></audio>
+
+    <script>
+        // ==================== 游戏状态管理 ====================
+        const gameState = {
+            currentScene: 1,
+            isDialogueActive: false,
+            currentDialogueIndex: 0,
+            shownDialogueIds: new Set(),
+            inventory: [], // 物品栏
+            characters: {
+                你: { position: 'right', color: '#4ecdc4' },
+                赵健: { position: 'left', color: '#ff6b6b' },
+                王鹏: { position: 'left', color: '#95e1d3' },
+                孙薇薇: { position: 'left', color: '#f8a5c2' },
+                沈墨言: { position: 'left', color: '#778beb' }
+            },
+            isWaitingForClick: false,
+            clickCallback: null,
+            hasStarted: false,
+            scene4ImageSwitched: false,
+            isScene4Interactive: false,
+            currentDialogueContainer: null,
+            currentAvatarContainer: null
+        };
+        
+        // ==================== 物品系统 ====================
+        const inventoryItems = {
+            '纸条': {
+                id: 'note',
+                name: '纸条',
+                image: 'res/纸条.png',
+                description: '一张皱巴巴的纸条，上面似乎写着什么'
+            },
+            '二楼钥匙': {
+                id: 'key_second_floor',
+                name: '二楼钥匙',
+                image: 'res/二楼钥匙.png',
+                description: '一把小巧的黄铜钥匙，标签上写着"二楼"'
+            }
+        };
+        
+        // ==================== DOM元素引用 ====================
+        const elements = {
+            narrationBox: document.getElementById('narration-box'),
+            narrationContent: document.getElementById('narration-content'),
+            commentArea: document.getElementById('comment-area'),
+            viewerCount: document.getElementById('viewer-count'),
+            scene4Bg: document.getElementById('scene4-bg'),
+            itemOverlay: document.getElementById('item-overlay'),
+            overlayItemImg: document.getElementById('overlay-item-img'),
+            circleNote: document.getElementById('circle-note'),
+            circleKey: document.getElementById('circle-key'),
+			suspenseBgm: document.getElementById('suspense-bgm')
+        };
+        
+        // ==================== 震动效果 ====================
+        function triggerShakeEffect() {
+            const sceneElement = document.getElementById(`scene${gameState.currentScene}`);
+            if (sceneElement) {
+                sceneElement.classList.add('shaking');
+                setTimeout(() => {
+                    sceneElement.classList.remove('shaking');
+                    
+                    if (gameState.currentScene === 4 && !gameState.scene4ImageSwitched) {
+                        setTimeout(() => {
+                            elements.scene4Bg.src = 'res/roof4(2).jpg';
+                            gameState.scene4ImageSwitched = true;
+                        }, 500);
+                    }
+                }, 500);
+            }
+        }
+        
+        // ==================== 人物立绘系统 ====================
+        function showAvatar(sceneNum, character, avatar) {
+            clearAvatar(sceneNum);
+            
+            if (!character || !avatar) return;
+            
+            const charConfig = gameState.characters[character];
+            if (!charConfig) return;
+            
+            const avatarContainer = document.getElementById(`scene${sceneNum}-character-avatar-container`);
+            if (!avatarContainer) return;
+            
+            const avatarImg = document.createElement('img');
+            avatarImg.className = `character-avatar-img ${charConfig.position === 'right' ? 'character-right' : 'character-left'}`;
+            avatarImg.src = avatar;
+            avatarImg.alt = character;
+            avatarImg.style.opacity = '0';
+            avatarImg.style.animation = 'avatarFadeIn 0.7s ease forwards';
+            
+            avatarContainer.appendChild(avatarImg);
+            
+            // 设置淡入动画
+            setTimeout(() => {
+                avatarImg.style.opacity = '1';
+            }, 10);
+        }
+        
+        function clearAvatar(sceneNum) {
+            const avatarContainer = document.getElementById(`scene${sceneNum}-character-avatar-container`);
+            if (avatarContainer) {
+                avatarContainer.innerHTML = '';
+            }
+        }
+        
+        // ==================== 物品栏函数 ====================
+        function addItemToInventory(itemId) {
+            const item = inventoryItems[itemId];
+            if (!item) return false;
+            
+            const existingItem = gameState.inventory.find(i => i.id === item.id);
+            if (!existingItem) {
+                gameState.inventory.push({
+                    ...item,
+                    count: 1
+                });
+                updateInventoryDisplay();
+                return true;
+            }
+            return false;
+        }
+        
+        function updateInventoryDisplay() {
+            for (let i = 1; i <= 4; i++) {
+                const inventoryArea = document.getElementById(`inventory-area${i}`) || 
+                                     (i === 1 ? document.getElementById('inventory-area') : null);
+                if (!inventoryArea) continue;
+                
+                inventoryArea.innerHTML = '';
+                
+                const titleElement = document.createElement('div');
+                titleElement.className = 'inventory-placeholder';
+                titleElement.textContent = '物品栏';
+                inventoryArea.appendChild(titleElement);
+                
+                gameState.inventory.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'inventory-item';
+                    itemDiv.title = item.name + ': ' + item.description;
+                    itemDiv.dataset.itemId = item.id;
+                    
+                    const img = document.createElement('img');
+                    img.src = item.image;
+                    img.alt = item.name;
+                    itemDiv.appendChild(img);
+                    
+                    itemDiv.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        alert("暂时不需要物品哦~");
+                    });
+                    
+                    inventoryArea.appendChild(itemDiv);
+                });
+            }
+        }
+        
+        // ==================== 圆环系统 ====================
+        function showScene4Circle(circleId, xPercent, yPercent) {
+            const circle = document.getElementById(circleId);
+            if (!circle) return;
+            
+            const scene4 = document.getElementById('scene4');
+            if (!scene4) return;
+            
+            const sceneContent = scene4.querySelector('.scene-content');
+            if (!sceneContent) return;
+            
+            const sceneRect = sceneContent.getBoundingClientRect();
+            const x = (sceneRect.width * xPercent / 100);
+            const y = (sceneRect.height * yPercent / 100);
+            
+            circle.style.left = x + 'px';
+            circle.style.top = y + 'px';
+            circle.style.display = 'block';
+            circle.classList.add('active');
+            
+            const circleContainer = circle.closest('.circle-container');
+            if (circleContainer) {
+                circleContainer.style.display = 'block';
+            }
+        }
+        
+        function hideScene4Circle(circleId) {
+            const circle = document.getElementById(circleId);
+            if (circle) {
+                circle.classList.remove('active');
+                setTimeout(() => {
+                    circle.style.display = 'none';
+                }, 300);
+            }
+        }
+        
+        // ==================== 物品放大展示 ====================
+        let currentItemToAdd = null;
+
+        function showItemOverlay(imageSrc, itemId) {
+            elements.overlayItemImg.src = imageSrc;
+            currentItemToAdd = itemId;
+            elements.itemOverlay.classList.add('active');
+            
+            // 播放获得物品的音效
+            playGetItemSound();
+        }
+
+        // 新增：播放获得物品音效的函数
+        function playGetItemSound() {
+            const audio = new Audio('res/获得物品音频.mp3');
+            audio.volume = 0.7; // 设置音量（0.0到1.0）
+            audio.play().catch(e => {
+                console.log("音频播放失败:", e);
+                // 有些浏览器需要用户交互后才能播放音频
+            });
+        }
+
+        function closeItemOverlay() {
+            elements.itemOverlay.classList.remove('active');
+            
+            if (currentItemToAdd) {
+                const added = addItemToInventory(currentItemToAdd);
+                if (added) {
+                    if (currentItemToAdd === '纸条') {
+                        setTimeout(() => {
+                            showScene4NoteDialog();
+                        }, 300);
+                    } else if (currentItemToAdd === '二楼钥匙') {
+                        setTimeout(() => {
+                            showScene4FinalDialog();
+                        }, 300);
+                    }
+                }
+                currentItemToAdd = null;
+            }
+        }
+
+        function handleScene4CircleClick(circleId) {
+            if (circleId === 'circle-note') {
+                showItemOverlay('res/纸条.png', '纸条');
+                hideScene4Circle('circle-note');
+            } else if (circleId === 'circle-key') {
+                showItemOverlay('res/二楼钥匙.png', '二楼钥匙');
+                hideScene4Circle('circle-key');
+            }
+        }
+        
+        // ==================== 点击等待机制 ====================
+        function waitForClick(callback) {
+            if (gameState.isWaitingForClick) return;
+            
+            gameState.isWaitingForClick = true;
+            gameState.clickCallback = callback;
+        }
+        
+        function handleSceneClick(event) {
+            // 检查是否点击了特殊元素
+            if (event.target.classList.contains('item-get-button') ||
+                event.target.classList.contains('map-link') || 
+                event.target.closest('.map-link') ||
+                event.target.classList.contains('scene-link') || 
+                event.target.closest('.scene-link') ||
+                event.target.classList.contains('hint-circle') || 
+                event.target.closest('.hint-circle')) {
+                return;
+            }
+            
+            // 检查是否点击了物品栏
+            for (let i = 1; i <= 4; i++) {
+                const inventoryArea = document.getElementById(`inventory-area${i}`) || 
+                                     (i === 1 ? document.getElementById('inventory-area') : null);
+                if (inventoryArea && inventoryArea.contains(event.target)) {
+                    return;
+                }
+            }
+            
+            // 检查是否点击了物品放大层
+            if (elements.itemOverlay.classList.contains('active')) {
+                return;
+            }
+            
+            // 执行点击回调
+            if (gameState.isWaitingForClick && gameState.clickCallback) {
+                const callback = gameState.clickCallback;
+                gameState.isWaitingForClick = false;
+                gameState.clickCallback = null;
+                callback();
+            }
+        }
+        
+        // ==================== 弹幕内容 ====================
+        const commentsData = {
+            走廊初始: [
+                { user: '探险爱好者', text: '终于进教学楼了！好刺激！' },
+                { user: '胆小但爱看', text: '这走廊好恐怖啊' },
+                { user: '推理大师', text: '破布飘动肯定是风吹的' },
+                { user: '恐怖片专家', text: '这种场景必有高能！' },
+                { user: '夜猫子', text: '主播胆子真大，敢晚上来这种地方' },
+                { user: '建筑爱好者', text: '这教学楼建筑风格好老' },
+                { user: '气氛组', text: '气氛烘托到位了' },
+                { user: '预言家', text: '我赌五分钟内必吓一跳' },
+                { user: '护体弹幕', text: '弹幕护体弹幕护体！' },
+                { user: '老观众', text: '晚晚今天穿的裙子真好看' }
+            ],
+            走廊味道: [
+                { user: '特殊网友', text: '主播注意安全啊！这地方看着不对劲' },
+                { user: '探险家007', text: '这霉菌味隔着屏幕都闻到了' },
+                { user: '恐怖爱好者', text: '高能预警！准备捂眼' },
+                { user: '洁癖患者', text: '这环境也太脏了吧' },
+                { user: '环境专家', text: '这种废弃建筑霉菌很多，注意呼吸道' },
+                { user: '捂鼻侠', text: '我隔着屏幕都捂鼻子了' },
+                { user: '心疼晚晚', text: '晚晚的漂亮裙子要弄脏了' },
+                { user: '退堂鼓', text: '要不咱们回去吧' },
+                { user: '勇者', text: '来都来了，继续前进！' },
+                { user: '吐槽帝', text: '这味道，太上头了' }
+            ],
+            楼梯回忆: [
+                { user: '记忆大师', text: '赵健当年被罚跑楼梯我记得' },
+                { user: '观察员', text: '孙薇薇又在装了' },
+                { user: '分析帝', text: '晚晴在回避过去的话题' },
+                { user: '怀旧党', text: '想起我的学生时代了' },
+                { user: '八卦记者', text: '他们几个关系挺微妙啊' },
+                { user: '微表情专家', text: '注意每个人的表情变化' },
+                { user: '情商课代表', text: '说话的艺术，学废了' },
+                { user: '回忆杀', text: '学生时代的回忆总是美好的' },
+                { user: '塑料姐妹', text: '这塑料姐妹情太真实了' },
+                { user: '话里有话', text: '每个人说话都话里有话' }
+            ],
+            圆桌开始: [
+                { user: '特殊网友', text: '圆桌会议开始了！' },
+                { user: '特殊网友', text: '轮流介绍啊' },
+                { user: '剧本杀玩家', text: '经典圆桌讨论环节' },
+                { user: '期待党', text: '终于要揭露真相了吗' },
+                { user: '名侦探', text: '真相只有一个！' },
+                { user: '氛围组', text: '天台圆桌，这氛围绝了' },
+                { user: '月光爱好者', text: '月光下开圆桌会议，好有感觉' },
+                { user: '推理迷', text: '坐等推理大戏' },
+                { user: '吃瓜群众', text: '瓜子花生矿泉水已备好' },
+                { user: '记录员', text: '拿小本本记下来' }
+            ],
+            晚晴发言: [
+                { user: '网友', text: '晚晴和小纸不熟？真的假的' },
+                { user: '网友', text: '主播演技不错啊' },
+                { user: '怀疑论者', text: '真的不熟吗？我表示怀疑' },
+                { user: '直女发言', text: '我长得好好，学习好，哈哈真实' },
+                { user: '自信女王', text: '晚晴好自信，爱了爱了' },
+                { user: '回避话题', text: '明显在回避什么' },
+                { user: '演员已就位', text: '演技上线了' },
+                { user: '话术高手', text: '这话术，滴水不漏' },
+                { user: '转移话题', text: '成功转移话题到直播' },
+                { user: '商业鬼才', text: '不忘带货，商业鬼才' }
+            ],
+            薇薇发言: [
+                { user: '网友', text: '孙薇薇又在装纯了' },
+                { user: '网友', text: '草包自己承认了，哈哈哈' },
+                { user: '绿茶鉴定师', text: '典型的绿茶发言' },
+                { user: '自黑高手', text: '自黑也是一种保护' },
+                { user: '心机girl', text: '心机深重啊' },
+                { user: '装傻充愣', text: '装傻充愣第一名' },
+                { user: '塑料姐妹', text: '塑料姐妹花实锤' },
+                { user: '演技派', text: '这演技，可以拿奖了' },
+                { user: '人设立住了', text: '草包人设立住了' },
+                { user: '话里有话', text: '每句话都话里有话' }
+            ],
+            赵健发言: [
+                { user: '网友', text: '赵健身材不错啊' },
+                { user: '网友', text: '体育委员就是壮' },
+                { user: '肌肉控', text: '这肌肉我可以！' },
+                { user: '直男发言', text: '直男发言现场' },
+                { user: '无神论者', text: '坚定的无神论者' },
+                { user: '拆台王', text: '开始拆台了' },
+                { user: '气氛破坏者', text: '气氛被破坏了' },
+                { user: '实诚人', text: '虽然直但实诚' },
+                { user: '肌肉大脑', text: '四肢发达头脑简单' },
+                { user: '搞笑担当', text: '搞笑担当上线' }
+            ],
+            王鹏发言: [
+                { user: '侦探迷', text: '王鹏说小纸是他朋友？' },
+                { user: '网友', text: '有情况！' },
+                { user: '心理分析师', text: '注意每个人的微表情' },
+                { user: '关键证人', text: '关键证人出现了' },
+                { user: '突破口', text: '突破口来了' },
+                { user: '紧张大师', text: '王鹏好紧张' },
+                { user: '知道内情', text: '他肯定知道什么' },
+                { user: '突破口', text: '这是突破口啊' },
+                { user: '老实人', text: '老实人憋不住了' },
+                { user: '真相接近', text: '离真相越来越近了' }
+            ],
+            对峙王鹏: [
+                { user: '网友', text: '王鹏被围攻了！' },
+                { user: '网友', text: '他肯定知道什么' },
+                { user: '网友', text: '好紧张啊' },
+                { user: '围攻现场', text: '开始围攻了' },
+                { user: '逼供现场', text: '大型逼供现场' },
+                { user: '心理战', text: '心理战开始了' },
+                { user: '突破口', text: '王鹏是突破口' },
+                { user: '压力山大', text: '王鹏压力好大' },
+                { user: '集体施压', text: '集体施压现场' },
+                { user: '真相逼近', text: '真相越来越近了' }
+            ],
+            沈墨言坦白: [
+                { user: '特殊网友', text: '卧槽！沈墨言在现场？！' },
+                { user: '特殊网友', text: '这不是剧本！这是真的！' },
+                { user: '吃瓜群众', text: '直播间要炸了！' },
+                { user: '网友', text: '快报警啊！' },
+                { user: '震惊党', text: '我震惊了！' },
+                { user: '高能预警', text: '前方超级高能！' },
+                { user: '反转来了', text: '大反转来了！' },
+                { user: '真相大白', text: '真相要大白了' },
+                { user: '手抖了', text: '吓得我手机都掉了' },
+                { user: '不敢看了', text: '我不敢看了' }
+            ],
+            沈墨言赎罪: [
+                { user: '网友', text: '为了赎罪？什么意思？' },
+                { user: '网友', text: '他做了什么？' },
+                { user: '网友', text: '当年到底发生了什么？' },
+                { user: '赎罪论', text: '赎罪？细思极恐' },
+                { user: '内疚感', text: '看来他内心有愧' },
+                { user: '往事揭秘', text: '往事要揭秘了' },
+                { user: '沉重往事', text: '看来有沉重的往事' },
+                { user: '心理负担', text: '他有很重的心理负担' },
+                { user: '忏悔者', text: '这是一个忏悔者' },
+                { user: '真相核心', text: '接近真相核心了' }
+            ],
+            沈墨言跳楼: [
+                { user: '震惊网友', text: '他跳了？！' },
+                { user: '网友', text: '真跳了？！' },
+                { user: '网友', text: '我的天啊！' },
+                { user: '不敢置信', text: '我不敢相信！' },
+                { user: '出人命了', text: '出人命了！' },
+                { user: '快报警', text: '快打110！' },
+                { user: '手抖了x2', text: '吓得我手机又掉了' },
+                { user: '心脏骤停', text: '我心脏骤停了' },
+                { user: '捂眼党', text: '我不敢看了' },
+                { user: '尖叫党', text: '啊！！！！' }
+            ],
+            假人真相: [
+                { user: '网友', text: '是假人？' },
+                { user: '网友', text: '虚惊一场' },
+                { user: '网友', text: '吓死我了' },
+                { user: '松了口气', text: '呼，松了口气' },
+                { user: '还好是假的', text: '还好是假的' },
+                { user: '玩得真大', text: '玩得真大啊' },
+                { user: '套路太深', text: '套路太深了' },
+                { user: '被耍了', text: '我们被耍了' },
+                { user: '节目效果', text: '节目效果拉满' },
+                { user: '演技派', text: '沈墨言演技可以' }
+            ],
+            二楼钥匙: [
+                { user: '推理达人', text: '钥匙指向二楼' },
+                { user: '线索出现', text: '新线索出现了' },
+                { user: '下一站二楼', text: '下一站，二楼' },
+                { user: '继续探险', text: '探险继续' },
+                { user: '新的开始', text: '新的关卡开始了' },
+                { user: '期待二楼', text: '期待二楼剧情' },
+                { user: '收集物品', text: '开始收集物品了' },
+                { user: '游戏继续', text: '游戏还得继续' },
+                { user: '被迫参与', text: '被迫继续游戏' },
+                { user: '越来越刺激', text: '越来越刺激了' }
+            ]
+        };
+        
+        // ==================== 场景对话序列 ====================
+        const sceneDialogues = {
+            scene1: [
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '这什么味儿啊……晚晴姐，我们真要进去吗？感觉这楼随时都会塌。',
+                    avatar: 'res/孙薇薇.png',
+                    action: '小声抱怨',
+                    commentTrigger: '走廊味道'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '来都来了，怕什么？',
+                    avatar: 'res/赵健.png',
+                    action: '赵健倒是兴致勃勃，他晃了晃手机电筒，刺眼的白光划破黑暗'
+                },
+                {
+                    type: 'narration',
+                    content: '王鹏沉默地跟在最后，脚步轻得像猫。<br><br>我下意识掩鼻，继续往前走。<br/><br/><span style="color: #ffcc00;">提示：点击右上角箭头，切换场景</span>'
+                }
+            ],
+            
+            scene2: [
+                {
+                    type: 'narration',
+                    content: '楼梯间更为压抑。墙面绿漆斑驳脱落，露出暗黄腻子。曾贴满照片与标语的宣传栏，只剩几片残破纸角，在微弱气流中颤抖。台阶积着厚灰，每一步都扬起尘埃，在光柱中浮沉。脚步声、呼吸声在此空洞回响。'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '诶，说起来......这楼梯我当年可跑烂了。每次迟到都被老李罚跑十圈，跑完还得爬回教室。',
+                    avatar: 'res/赵健.png'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '你还说呢，每次打球回来一身汗，坐你旁边我都要被熏死了。还有，你老是不打招呼直接拿我的抽纸，一抽就是半包，自己买不起纸吗？',
+                    avatar: 'res/孙薇薇.png'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '诶哟，这点小事您还记这么久呢。我薇姐当时大气嘛，回头给您送一箱抽纸去！',
+                    avatar: 'res/赵健.png'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '你那时候还挺受欢迎的吧，总有小女生偷偷往你桌肚里塞饮料。',
+                    avatar: 'res/林晚晴.png'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '是啊，可惜高中毕业就各奔东西了，那时候多单纯啊。',
+                    avatar: 'res/赵健.png'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '要说当年，晚晴才是焦点吧？',
+                    avatar: 'res/孙薇薇.png'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '陈年旧事，只记得念书了。',
+                    avatar: 'res/林晚晴.png',
+                    commentTrigger: '楼梯回忆'
+                },
+                {
+                    type: 'narration',
+                    content: '王鹏在最后极低地嘟囔了一句，无人听清。<br><br>楼梯尽头，一道铁栅栏门拦住去路，挂锁与校门那把无异。赵健拽了拽，纹丝不动。'
+                },
+                {
+                    type: 'character',
+                    character: '沈墨言',
+                    text: '游戏设计。',
+                    avatar: 'res/沈墨言.png'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '赵健在他后面做了一个虚空打拳的动作，不满道："神神秘秘的，死装男。"<br/><br/><span style="color: #ffcc00;">提示：点击右上角箭头，切换场景</span>',
+                    avatar: 'res/赵健.png'
+                }
+            ],
+            
+            scene3: [
+                {
+                    type: 'narration',
+                    content: '铁门被推开，发出刺耳的"嘎吱"声。天台上，粗糙的水泥地缝钻出杂草。中央竟有一张旧木圆桌和几把椅子。清冷月光（或是桌上应急灯过分明亮的光）洒落。<br><br>沈墨言在最里侧坐下，指尖相抵。',
+                    commentTrigger: '圆桌开始'
+                },
+                {
+                    type: 'character',
+                    character: '沈墨言',
+                    text: '开始吧。七年前，此地有人坠亡，名叫"小纸"。之后灵异频发。我们作为她旧日同窗，今夜来此，查明真相，赢取"惊喜"。',
+                    avatar: 'res/沈墨言.png'
+                },
+                {
+                    type: 'narration',
+                    content: '他目光落向我，做了个"请"的手势。'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '高三九班的林校花，学习委员。我长得好好，学习好，人缘好，样样都好。与小纸不熟，无甚交集。',
+                    avatar: 'res/林晚晴.png',
+                    commentTrigger: '晚晴发言'
+                },
+                {
+                    type: 'character',
+                    character: '沈墨言',
+                    text: '那你是怎么看待灵异事件的？现在有两个论派，一是鬼魂复仇，二是有人搞鬼。',
+                    avatar: 'res/沈墨言.png'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '我猜是人为。谁在捣鬼，自己清楚。',
+                    action: '你语气轻松，甚至带了点漫不经心。',
+                    avatar: 'res/林晚晴.png',
+                    innerThought: '随即转向镜头，笑容明媚："观众朋友们，关注点赞，助力揭秘，回去抽奖。"'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '孙薇薇，文艺委员，晚晴最好的朋友。和小纸不熟啦。闹鬼？应该是人装的吧……我都人设不一直都是美丽草包吗。',
+                    avatar: 'res/孙薇薇.png',
+                    commentTrigger: '薇薇发言'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '赵健，体育委员。家人们，都看到了我硕大的肌肉了吧，有我在，别怕！',
+                    avatar: 'res/赵健.png',
+                    action: '他甚至单手拎起椅子，引得旁人侧目。',
+                    commentTrigger: '赵健发言'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '当初这跳楼那女的？不认识，要我说啊，就是太矫情，这年头动不动就跳楼，心理承受能力不行啊。据说还是和我们一个班的？嘶，我对这人还真没啥印象，咱班有这个人吗？然后这个什么乱七八糟的灵异事件，那包是有人搞鬼啊，作为一个坚定的无神论者，这世界根本就没鬼。来，跟我一起念——富强民主文明和谐……',
+                    avatar: 'res/赵健.png'
+                },
+                {
+                    type: 'character',
+                    character: '王鹏',
+                    text: '王鹏……普通学生。我、我认识小纸。她是我……朋友。',
+                    avatar: 'res/王鹏.png',
+                    commentTrigger: '王鹏发言'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '你是朋友能不知道原因？',
+                    avatar: 'res/赵健.png'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '是真的朋友吗？不会是那种喜欢在背后捅人刀子的‘朋友’吧。说不定那个……小纸跳楼就跟你有关呢～',
+                    avatar: 'res/孙薇薇.png',
+                    innerThought: '语气天真而锐利',
+                    commentTrigger: '对峙王鹏'
+                },
+                {
+                    type: 'narration',
+                    content:'你也看向王鹏，眼里装着怀疑。'
+                },
+                {
+                    type: 'character',
+                    character: '王鹏',
+                    text: '王鹏却应激般地反驳："不是的！我没有！你们相信我，真的、真的有鬼，是她回来了，一定是她回来了……"王鹏脸色煞白，蜷缩起来，喃喃重复："她回来了……回来了……"',
+                    avatar: 'res/王鹏.png'
+                },
+                {
+                    type: 'narration',
+                    content: '你转过头看着沈墨言，却发现他又在直勾勾地看着你。这次你很确信你没看错人，你暗骂神经病，暗恋我吗？一直盯我看，我脸上也没东西吧。<br/><br/><span style="color: #ffcc00;">提示：点击右上角箭头，切换场景</span>'
+                }
+            ],
+            
+            scene4: [
+                {
+                    type: 'narration',
+                    content: '沈墨言起身，缓步走向天台边缘，手撑矮墙，俯身下望。然后转身，背靠黑暗，脸上绽开一个奇异、近乎陶醉的笑。'
+                },
+                {
+                    type: 'character',
+                    character: '沈墨言',
+                    text: '我是沈墨言，是高三九班的班长。小纸我也认识，是个很好的女孩儿。她跳下去时，我就在现场。',
+                    avatar: 'res/沈墨言.png',
+                    commentTrigger: '沈墨言坦白'
+                },
+                {
+                    type: 'narration',
+                    content: '孙薇薇捂嘴惊叫。<br><br>在众人惊愕目光中，他竟轻盈坐上矮墙边缘，双腿悬空。'
+                },
+                {
+                    type: 'character',
+                    character: '沈墨言',
+                    text: '游戏结束。制造"灵异"的人，是我。',
+                    avatar: 'res/沈墨言.png'
+                },
+                {
+                    type: 'narration',
+                    content: '你这下不能保持平静了，这什么玩法？凶手自爆？剧本杀里不是这样的啊，应该是大家一起搜证，然后集中讨论，最后凭借她过人的推理能力找到凶手，赢得所谓的赏金，这不是最重要的，最重要的这是她能博取更多流量，重回平台一姐的重要一仗！沈墨言这家伙在搞什么呢！'
+                },
+                {
+                    type: 'character',
+                    character: '沈墨言',
+                    text: '猜猜为什么？"惊喜"暂且保密。但若问缘由……为了赎罪。',
+                    avatar: 'res/沈墨言.png',
+                    innerThought: '他抬头望月，笑容里杂糅苦涩与狂热',
+                    commentTrigger: '沈墨言赎罪'
+                },
+                {
+                    type: 'character',
+                    character: '沈墨言',
+                    text: '"哈哈…别用那种眼神盯着我。还没完，记得这把钥匙吗？"沈墨言不知从哪掏出的一把钥匙，小巧，黄澄澄的。你立马联系到了走廊上的、大门口的那些挂的锁。"看来你们想到了。"接着他做出一个令在场人更加错愕的举动——沈墨言仰头吞下了这枚钥匙！',
+                    avatar: 'res/沈墨言.png'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '赵健大喊："你特么疯了吗？你到底要干啥？！"说完做出要去拽沈墨言的动作。',
+                    avatar: 'res/赵健.png'
+                },
+                {
+                    type: 'character',
+                    character: '沈墨言',
+                    text: '现在！校园唯一的出口的钥匙已经被我吞下了，你们出不去了，哈哈哈……你们真应该照照镜子看看你们脸上精彩纷呈的表情。想要出去？那就继续这场游戏！你们的目标就是解开我们的最终谜题——小纸为什么跳楼。而作为奖励，钥匙会在解开最终谜题的时候给你们，不要想着翻墙逃跑和暴力拆解，所有围墙和门已经被我布上了电击装置。怎么样，这下够不够刺激？好玩？有趣？',
+                    avatar: 'res/沈墨言.png'
+                },
+                {
+                    type: 'character',
+                    character: '赵健',
+                    text: '赵健彻底被激怒了，你们也坐不下去了。赵健撸起袖子就朝沈墨言冲过去："TNND，谁要跟你玩这破游戏，老子不玩了，快让老子走！"',
+                    avatar: 'res/赵健.png'
+                },
+                {
+                    type: 'narration',
+                    content: '就在赵健即将触碰到沈墨言的衣袖时，他却双臂大张，身体后仰，整个人翻了出去，就这么轻飘飘地坠下去，像纸飞机一样。临走前嘴角还挂着诡异的笑容。"沈墨言！！！！"赵健右手抓了个空。<br/><br/>你迅速扑到天台旁，只听一道沉重的撞击声，你隐隐约约只看到一道人影趴在教学楼底下脏乱的地砖上。',
+                    action: function() {
+                        triggerShakeEffect();
+                    },
+                    commentTrigger: '沈墨言跳楼'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '他他他、他真跳了？？！',
+                    avatar: 'res/孙薇薇.png'
+                },
+                {
+                    type: 'narration',
+                    content: '你似乎还看见"他"身体下有什么液体在流动，少时即蔓延至四面八方。赵健怔怔盯着自己的手。'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '你大吼："不是你推的，是他自己掉下去的！别愣着了，快下去看看！"然后转身就往楼下冲。',
+                    avatar: 'res/林晚晴.png'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '一阵激烈的脚步声后，孙薇薇跟在后面边跑边骂："这疯子！"',
+                    avatar: 'res/孙薇薇.png'
+                },
+                {
+                    type: 'narration',
+                    content: '你也顾不上美丽，优雅什么的，先见鬼去吧！你只想着别真众目睽睽下闹出人命了啊，你还不想永远离开这一行业。由于跑得太急，你还差点崴了脚。最后，你们四人半分钟连滚带爬冲到了教学楼前。手电光下，一具穿着沈墨言衣服的假人趴在血红的浆液之中。夜风吹过，很冷，卷起地上的枯叶。你们心更冷，你隐隐约约意识到——这不是一场普通的同学聚会，更不是一场普通的游戏。',
+                    commentTrigger: '假人真相'
+                },
+                {
+                    type: 'narration',
+                    content: '你们站在假人尸体旁，手电光在黑暗中交错摇晃，每个人的脸上都蒙着一层不安的阴影。'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '孙薇薇的声音带着哭腔："现在怎么办？沈墨言到底在搞什么啊？这、这真的是剧本杀吗？"',
+                    avatar: 'res/孙薇薇.png'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '你先安抚着孙薇薇："先跟着他的节奏来吧。"',
+                    avatar: 'res/林晚晴.png'
+                },
+                {
+                    type: 'narration',
+                    content: '赵健蹲下身，用力扯了扯假人身上的衣服，又摸了摸那滩"血"——粘稠的红色颜料在指尖拉丝。'
+                },
+                {
+                    type: 'character',
+                    character:'赵健',
+                    text: '他站起身，啐了一口："装神弄鬼！"<br><br>他抬头看向校门方向，眼神凶狠，"老子不信邪，去大门看看。不就是个破锁吗，踹不开我拆了它！"',
+                    avatar: 'res/赵健.png'
+                },
+                {
+                    type: 'narration',
+                    content: '他说完就要走，你急忙拉住他："赵健，别冲动！"<br><br>赵健甩开你的手，"我他妈现在就去把门拆了，敢耍我，我倒要让他见识见识我的厉害！"<br><br>你有点无语，这个头脑简单四肢发达的家伙能不能别那么冲动。但是，也罢，让他去看看又何妨，万一沈墨言只是虚张声势呢？'
+                },
+                {
+                    type: 'narration',
+                    content: '你只好说："那你小心，有情况手机联系。"<br><br>赵健点点头，大步流星朝学校大门方向走去，身影很快没入黑暗。<br><br>你开始给自己找点事做：'
+                },
+                {
+                    type: 'narration',
+                    content: '假人附近的飘落着一张纸条，估计是刚刚被赵健扯下来的。',
+                    action: function() {},
+                    isLastInScene: true,
+                    commentTrigger: '二楼钥匙'
+                }
+            ]
+        };
+        
+        // ==================== 场景4特殊对话函数 ====================
+        function showScene4NoteDialog() {
+            const container = document.getElementById('scene4-dialogue-container');
+            if (!container) return;
+            
+            const narrationBox = document.createElement('div');
+            narrationBox.className = 'narration-box';
+            narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+            
+            narrationBox.innerHTML = `
+                <div class="dialogue-text">
+                    你蹲下身，强忍着恐惧与不适，在假人身上摸索。衣服是沈墨言白天穿的那件灰色衬衫，但里面塞的只是旧报纸和海绵。你翻开假人的外套口袋——空的。内侧口袋——也是空的。
+                </div>
+                <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(narrationBox);
+            
+            setTimeout(() => {
+                narrationBox.style.opacity = '1';
+                
+                waitForClick(() => {
+                    showScene4WangPengDialog();
+                });
+            }, 10);
+        }
+        
+        function showScene4WangPengDialog() {
+            const container = document.getElementById('scene4-dialogue-container');
+            if (!container) return;
+            
+            const dialogueBox = document.createElement('div');
+            dialogueBox.className = 'dialogue-box';
+            dialogueBox.style.animation = 'dialogueFadeIn 0.5s ease';
+            
+            const charConfig = gameState.characters['王鹏'];
+            
+            dialogueBox.innerHTML = `
+                <div class="dialogue-title">
+                    <span class="title-icon" style="background-color:${charConfig.color}"></span>
+                    王鹏
+                </div>
+                <div class="dialogue-text">忽然王鹏小声说了句："它手里有东西。"</div>
+                <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(dialogueBox);
+            
+            // 显示王鹏立绘
+            showAvatar(4, '王鹏', 'res/王鹏.png');
+            
+            setTimeout(() => {
+                dialogueBox.style.opacity = '1';
+                
+                waitForClick(() => {
+                    container.innerHTML = '';
+                    clearAvatar(4);
+                    setTimeout(() => {
+                        showScene4Circle('circle-key', 68, 58);
+                    }, 500);
+                });
+            }, 10);
+        }
+        
+        function showScene4FinalDialog() {
+            const container = document.getElementById('scene4-dialogue-container');
+            if (!container) return;
+            
+            const narrationBox = document.createElement('div');
+            narrationBox.className = 'narration-box';
+            narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+            
+            narrationBox.innerHTML = `
+                <div class="dialogue-text">
+                    假人攥紧的右手，指缝里露出一小截金属反光。你掰开它僵硬的手指——一把黄铜钥匙躺在掌心。
+                    <br><br>
+                    孙薇薇很惊喜，王鹏却发现这钥匙的尺寸不对。
+                    <br><br>
+                    你仔细看，这确实不是大门那种挂锁的钥匙，而是一把小巧的、老式的单齿钥匙，像是开旧式门锁或抽屉用的。钥匙上贴着一小条胶布，上面用钢笔写着："二楼"。
+                    <br><br>
+                    "看样子我们接下来得去二楼了。"你起身拍拍手对剩下几个人说道，"还记得每一层楼梯与教室走廊都用铁门隔着的吗？只有二楼那里挂上了锁，其他地方都是直接锁死的。"
+                    <br><br>
+                    孙薇薇落在了后方，"那我们走、走吧……哎晚晚你慢点，等等我啊！"
+                    <br/><br/>
+                    <p style="color:red;">触发物品栏：接下来收获的每一个物品都会存放在右侧的物品栏中，选择对应物品利用在某关卡中，帮助你通关。注：使用过的物品将会消失在物品栏中。</p>
+                </div>
+                <div class="special-hint" style="color: #ffcc00; font-style: italic; margin-top: 10px;">
+                    提示：获得了两件物品，点击上方"回到地图"开始走廊关卡
+                </div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(narrationBox);
+            
+            setTimeout(() => {
+                narrationBox.style.opacity = '1';
+                gameState.isScene4Interactive = false;
+            }, 10);
+        }
+        
+        function handleScene4LastDialogClick() {
+            const container = document.getElementById('scene4-dialogue-container');
+            if (container) {
+                container.innerHTML = '';
+            }
+            
+            setTimeout(() => {
+                showScene4Circle('circle-note', 45, 55);
+                gameState.isScene4Interactive = true;
+            }, 300);
+        }
+        
+        // ==================== 通用函数 ====================
+        function addComments(comments, interval = 300) {
+            let index = 0;
+            
+            const existingComments = Array.from(elements.commentArea.children).map(child => {
+                const textDiv = child.querySelector('div:nth-child(2)');
+                return textDiv ? textDiv.textContent : '';
+            });
+            
+            function addNextComment() {
+                if (index >= comments.length) return;
+                
+                const comment = comments[index];
+                
+                if (!existingComments.includes(comment.text)) {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'comment pop-in';
+                    commentDiv.innerHTML = `
+                        <div class="comment-user">${comment.user}</div>
+                        <div>${comment.text}</div>
+                    `;
+                    elements.commentArea.appendChild(commentDiv);
+                    
+                    setTimeout(() => {
+                        commentDiv.style.animation = 'popIn 0.5s ease forwards';
+                    }, 10);
+                    
+                    scrollCommentsToBottom();
+                    
+                    const currentCount = parseInt(elements.viewerCount.textContent);
+                    const increment = Math.floor(Math.random() * 15) + 10;
+                    elements.viewerCount.textContent = currentCount + increment;
+                }
+                
+                index++;
+                
+                if (index < comments.length) {
+                    setTimeout(addNextComment, interval);
+                }
+            }
+            
+            addNextComment();
+        }
+        
+        function scrollCommentsToBottom() {
+            if (elements.commentArea) {
+                elements.commentArea.scrollTop = elements.commentArea.scrollHeight;
+            }
+        }
+        
+        // ==================== 核心：场景切换和对话播放 ====================
+        function switchToScene2AndStart() {
+            window.location.hash = '#scene2';
+            switchToScene(2);
+        }
+        
+        function switchToScene3AndStart() {
+            window.location.hash = '#scene3';
+            switchToScene(3);
+        }
+        
+        function switchToScene4AndStart() {
+			window.location.hash = '#scene4';
+			switchToScene(4);
+    
+    // 播放悬疑BGM（切换到场景4时触发）
+			if (elements.suspenseBgm) {
+        // 先暂停（防止重复播放），再重置播放位置，最后播放
+				elements.suspenseBgm.pause();
+				elements.suspenseBgm.currentTime = 0;
+				elements.suspenseBgm.play().catch(err => {
+					console.log('播放悬疑BGM失败:', err);
+            // 处理浏览器自动播放策略限制
+					document.addEventListener('click', function playBgmOnClick() {
+						elements.suspenseBgm.play();
+						document.removeEventListener('click', playBgmOnClick);
+					}, { once: true });
+				});
+			}
+		}
+        
+        function switchToScene(sceneNum) {
+            gameState.currentScene = sceneNum;
+            gameState.currentDialogueIndex = 0;
+            gameState.shownDialogueIds.clear();
+            gameState.isScene4Interactive = false;
+            
+            // 根据场景设置对话容器
+            switch(sceneNum) {
+                case 1:
+                    gameState.currentDialogueContainer = document.getElementById('scene1-dialogue-container');
+                    break;
+                case 2:
+                    gameState.currentDialogueContainer = document.getElementById('scene2-dialogue-container');
+                    break;
+                case 3:
+                    gameState.currentDialogueContainer = document.getElementById('scene3-dialogue-container');
+                    break;
+                case 4:
+                    gameState.currentDialogueContainer = document.getElementById('scene4-dialogue-container');
+                    // 重置场景4
+                    const scene4Bg = document.getElementById('scene4-bg');
+                    if (scene4Bg) {
+                        scene4Bg.src = 'res/roof4(1).jpg';
+                    }
+                    gameState.scene4ImageSwitched = false;
+                    hideScene4Circle('circle-note');
+                    hideScene4Circle('circle-key');
+                    break;
+            }
+            
+            // 开始对话
+            playCurrentSceneDialogue();
+        }
+        
+        function playCurrentSceneDialogue() {
+            if (!gameState.currentDialogueContainer) return;
+            
+            const sceneKey = `scene${gameState.currentScene}`;
+            gameState.currentDialogueContainer.innerHTML = '';
+            gameState.currentDialogueIndex = 0;
+            
+            playSceneDialogue(sceneKey, gameState.currentDialogueContainer);
+        }
+        
+        function playSceneDialogue(sceneKey, container) {
+            const dialogues = sceneDialogues[sceneKey];
+            if (!dialogues || gameState.currentDialogueIndex >= dialogues.length) {
+                return;
+            }
+            
+            const dialogue = dialogues[gameState.currentDialogueIndex];
+            
+            const dialogueId = `${sceneKey}_${gameState.currentDialogueIndex}`;
+            
+            if (dialogue.commentTrigger && commentsData[dialogue.commentTrigger] && !gameState.shownDialogueIds.has(dialogueId)) {
+                addComments(commentsData[dialogue.commentTrigger], 300);
+                gameState.shownDialogueIds.add(dialogueId);
+            }
+            
+            if (dialogue.type === 'narration') {
+                showNarrationDialogue(sceneKey, dialogue.content, container, dialogue.action, dialogue.isLastInScene);
+            } else if (dialogue.type === 'character') {
+                showCharacterDialogue(sceneKey, dialogue, container, dialogue.isLastInScene);
+            }
+        }
+        
+        function showNarrationDialogue(sceneKey, content, container, actionCallback, isLastInScene = false) {
+            const narrationBox = document.createElement('div');
+            narrationBox.className = 'narration-box';
+            narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+            
+            const isLastDialogue = (gameState.currentDialogueIndex === sceneDialogues[sceneKey].length - 1);
+            
+            if (sceneKey === 'scene4' && isLastDialogue) {
+                narrationBox.innerHTML = `
+                    <div class="dialogue-text">${content}</div>
+                    <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(narrationBox);
+                
+                setTimeout(() => {
+                    narrationBox.style.opacity = '1';
+                    
+                    waitForClick(() => {
+                        handleScene4LastDialogClick();
+                    });
+                }, 10);
+                return;
+            } else {
+                if (isLastDialogue) {
+                    narrationBox.innerHTML = `
+                        <div class="dialogue-text">${content}</div>
+                    `;
+                } else {
+                    narrationBox.innerHTML = `
+                        <div class="dialogue-text">${content}</div>
+                        <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+                    `;
+                }
+            }
+            
+            container.innerHTML = '';
+            container.appendChild(narrationBox);
+            
+            setTimeout(() => {
+                narrationBox.style.opacity = '1';
+                
+                if (actionCallback && typeof actionCallback === 'function') {
+                    actionCallback();
+                }
+                
+                if (sceneKey === 'scene4' && isLastDialogue) {
+                    return;
+                }
+                
+                if (!isLastDialogue) {
+                    waitForClick(() => {
+                        gameState.currentDialogueIndex++;
+                        playSceneDialogue(sceneKey, container);
+                    });
+                }
+            }, 10);
+        }
+        
+        function showCharacterDialogue(sceneKey, dialogue, container, isLastInScene = false) {
+            // 清除之前的立绘
+            clearAvatar(gameState.currentScene);
+            
+            // 显示当前角色立绘
+            showAvatar(gameState.currentScene, dialogue.character, dialogue.avatar);
+            
+            const charConfig = gameState.characters[dialogue.character];
+            const dialogueBox = document.createElement('div');
+            dialogueBox.className = 'dialogue-box';
+            dialogueBox.style.animation = 'dialogueFadeIn 0.5s ease';
+            
+            let textContent = dialogue.text;
+            if (dialogue.innerThought) {
+                textContent += `<br><br><em style="color: #aaa;">${dialogue.innerThought}</em>`;
+            }
+            if (dialogue.action) {
+                textContent += `<br><br><span style="color: #ffcc00;">${dialogue.action}</span>`;
+            }
+            
+            const isLastDialogue = (gameState.currentDialogueIndex === sceneDialogues[sceneKey].length - 1);
+            
+            dialogueBox.innerHTML = `
+                <div class="dialogue-title">
+                    <span class="title-icon" style="background-color:${charConfig.color}"></span>
+                    ${dialogue.character}
+                </div>
+                <div class="dialogue-text">${textContent}</div>
+                ${isLastDialogue ? '' : '<div class="dialogue-hint">提示：点击屏幕任意位置继续</div>'}
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(dialogueBox);
+            
+            setTimeout(() => {
+                dialogueBox.style.opacity = '1';
+                
+                if (!isLastDialogue) {
+                    waitForClick(() => {
+                        gameState.currentDialogueIndex++;
+                        playSceneDialogue(sceneKey, container);
+                    });
+                }
+            }, 10);
+        }
+        
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化物品栏
+            updateInventoryDisplay();
+            
+            // 为圆环添加点击事件监听器
+            if (elements.circleNote) {
+                elements.circleNote.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleScene4CircleClick('circle-note');
+                });
+            }
+            
+            if (elements.circleKey) {
+                elements.circleKey.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleScene4CircleClick('circle-key');
+                });
+            }
+            
+            // 显示初始弹幕
+            setTimeout(() => {
+                addComments(commentsData.走廊初始, 300);
+            }, 1000);
+            
+            // 为整个游戏容器设置点击监听
+            document.addEventListener('click', function(e) {
+                handleSceneClick(e);
+            });
+            
+            // 设置初始状态
+            function initializeCurrentScene() {
+                const hash = window.location.hash;
+                if (hash) {
+                    const sceneMatch = hash.match(/#scene(\d+)/);
+                    if (sceneMatch) {
+                        const sceneNum = parseInt(sceneMatch[1]);
+                        setTimeout(() => {
+                            switchToScene(sceneNum);
+                        }, 100);
+                    }
+                } else {
+                    // 默认场景1
+                    gameState.hasStarted = true;
+                    gameState.currentScene = 1;
+                    gameState.currentDialogueIndex = 0;
+                    gameState.currentDialogueContainer = document.getElementById('scene1-dialogue-container');
+                    
+                    waitForClick(() => {
+                        gameState.currentDialogueIndex = 0;
+                        playCurrentSceneDialogue();
+                    });
+                    
+                    setTimeout(() => {
+                        if (elements.narrationBox) {
+                            elements.narrationBox.style.opacity = '1';
+                            elements.narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                        }
+                    }, 100);
+                }
+            }
+            
+            // 监听hash变化
+            window.addEventListener('hashchange', function() {
+                const sceneNum = parseInt(window.location.hash.replace('#scene', ''));
+                if (!isNaN(sceneNum)) {
+                    switchToScene(sceneNum);
+                }
+            });
+            
+            // 初始加载
+            initializeCurrentScene();
+            scrollCommentsToBottom();
+        });
+    </script>
+</body>
+</html>

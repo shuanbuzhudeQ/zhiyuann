@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纸怨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #EFFBFD;
+            color: #fff;
+            font-family: "微软雅黑", sans-serif;
+            line-height: 1.6;
+        }
+        .header-image {
+            width: 100%;
+            height: 400px;
+			background-size:contain ;
+            display: block;
+            border-bottom: 2px solid #333;
+        }
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .card {
+            background-color: #ffffff;
+            color: #333;
+            padding: 30px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #c0392b;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px; /* 圈与文字的间距 */
+        }
+        .title-circle {
+            width: 30px;
+            height: 30px;
+            background-color: #c0392b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0; /* 防止圆圈被压缩 */
+        }
+        .intro-text p {
+            margin-bottom: 18px;
+            text-align: justify;
+			text-indent: 2em;
+        }
+        .invitation-image {
+            width: 100%;
+            max-width: 800px;
+            display: block;
+            margin: 25px auto;
+            border-radius: 4px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            border: 1px solid #eee;
+        }
+        .notice-list {
+            padding-left: 25px;
+        }
+        .notice-list li {
+            margin-bottom: 15px;
+            padding-left: 5px;
+        }
+        .notice-list strong {
+            color: #862624;
+        }
+        .map-btn {
+            display: block;
+            width: 220px;
+            height: 45px;
+            line-height: 45px;
+            text-align: center;
+            background-color: #C1B1E4;
+            color: #fff;
+            border-radius: 4px;
+            text-decoration: none;
+            margin: 30px auto;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+        .map-btn:hover {
+            background-color: #40455F;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- 添加的背景音乐标签 -->
+    <audio src="res/开场bgm.mp3" autoplay loop muted id="bgmAudio">
+        您的浏览器不支持音频播放
+    </audio>
+    
+    <img src="res/buildings.jpg" alt="黄昏教学楼" class="header-image">
+    <div class="content">
+        <div class="card">
+            <div class="card-title">
+                <span class="title-circle">1</span>
+                引言
+            </div>
+            <div class="intro-text">
+                <p>2025 年 10 月 17 日。</p>
+				<p>你叫林晚晴，是AC站舞蹈区坐拥百万粉丝的大主播，是“舞蹈界女王”——至少你的简介和百万级商务合作合同上是这么写的。屏幕前，你是聚光灯下的尤物：红唇、性感大波浪、一袭修身舞衣踩着节拍扭着自信弧线。</p>
+                <p>可最近三个月，风向变了。</p>
+				<p>舞蹈区最近来的几个新主播一个比一个玩的开，也一个比一个年轻漂亮、有活力。而你因为最近的更新的内容高度同质化，没什么创新度，直播内容来来回回也是那几套。你的数据像被悄悄抽走氧气：开播在线人数跌破十万，就连你的榜单前十都好久没有出现过了。</p>
+				<p>你坐在梳妆台前，怔怔地盯着手机屏幕上那条刺眼消息，你经纪人发的：【晚晴，这个月流水又要挂红了。平台那边已经问了三次“是不是考虑换赛道”……再不想爆点拉人气，下个月可能连推荐位都保不住了。】身侧，墙上的电子屏还挂着你工作室自制的“热度预警表”，红色数字每天往下掉——是一柄达摩克里斯之剑，悬在你头顶，只靠一根名为“数据”的细线吊着。</p>
+                <p>就在这时，一封邮件跳在你在面前：</p>
+				<p>发件人：沈墨言。</p>
+				<p>你挑起眉头，那个高中时总低着头帮你写作业的班长，一棍子打不出个屁，毕业后就查无此人，如今竟敢主动联系你？</p>
+                <p>你本想直接忽略掉——这种小人物，也配浪费你的时间？</p>
+				<p>但你鬼使神差地点开了那封邮件。<br>
+				里面是一张手写邀请函的扫描件，纸页泛黄，像是从旧笔记本上撕下来的。字迹工整，语气轻松得近乎刻意：</p>
+            </div>
+            <img src="res/invitation.png" alt="复古邀请函" class="invitation-image">
+			<div class="intro-text">
+				<p>你嗤笑一声，把手机丢到台上：“沈墨言？还搞剧本杀？真当自己是个人物了？”</p>	
+			    <p>......</p>
+				<p>可下一秒，你停住了。</p>				
+				<p>反复咀嚼着“真人沉浸式恐怖剧本杀”这几个字。</p>				
+				<p>废弃校园、老友重聚、午夜探秘、沉浸恐怖、真人剧本杀……</p>				
+				<p>你忽然坐直身子。</p>				
+				<p>这不就是现成的爆点吗？</p>				
+				<p>你重新拿起手机，眼神渐渐锐利。</p>
+				<p>“你还是这么贴心啊，沈墨言。”你低声说，红唇勾起一抹算计的弧度，“这波我能不能翻身就看你的剧本杀了。”</p>
+			</div>	
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span class="title-circle">2</span>
+                玩家进入游戏注意事项
+            </div>
+            <ul class="notice-list">
+                <li><strong>环境沉浸警告</strong>：本次探秘全程在真实废弃校园开展，请提前做好心理建设，沉浸式体验需适度，切勿因过度代入产生应激反应。</li>
+                <li><strong>线索观察指南</strong>：校园的每一处细节都可能是破局关键，都可能藏着通往真相的密码。</li>
+                <li><strong>团队协作铁律</strong>：被邀请的“同学”并非随机组合，你们曾是高三（9）班的同窗，每个人的校园回忆碎片拼接起来，或许就是解开诡校之谜的钥匙。保持通讯，共享信息，独行的探险者终将迷失在时间的迷宫里。</li>
+                <li><strong>恐怖元素提示</strong>：游戏包含视觉、听觉双重惊悚设计，突然的音效<span style="font-weight: bold;font-style: italic;color: #862624;">（带上耳机食用更加哦~）</span>、幽暗处的轮廓、不符合物理规律的场景切换均为“剧情设定”，请根据自身承受能力调整参与程度，安全永远是第一位。</li>
+                <li><strong>互动线索机制</strong>：作为主播的你，每发现一处可疑线索，观众将基于你的画面与描述，在评论区提供脑洞推理、解谜思路等关键信息，这些互动内容将直接影响你对线索的解读与剧情的推进！</li>
+            </ul>
+        </div>
+
+        <a href="live-opening.html" class="map-btn">前往中学</a>
+    </div>
+
+    <!-- 解决浏览器自动播放限制的脚本 -->
+    <script>
+        // 监听页面点击事件，解决部分浏览器自动播放限制
+        document.addEventListener('click', function() {
+            const bgmAudio = document.getElementById('bgmAudio');
+            // 取消静音并播放
+            bgmAudio.muted = false;
+            bgmAudio.play().catch(err => {
+                console.log('音频播放失败:', err);
+            });
+        }, { once: true }); // 只执行一次
+        
+        // 页面加载完成后尝试播放
+        window.onload = function() {
+            const bgmAudio = document.getElementById('bgmAudio');
+            bgmAudio.play().catch(err => {
+                console.log('自动播放被浏览器限制，请点击页面任意位置播放BGM');
+            });
+        };
+    </script>
+</body>
+</html>

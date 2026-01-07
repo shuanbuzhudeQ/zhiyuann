@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纸怨 - 直播开场</title>
+    <style>
+        /* 重置样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        /* 章节过渡动画 - 优先级最高 */
+        .chapter-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .chapter-transition.hide {
+            display: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .chapter-text {
+            font-family: "Blackletter", "Old English Text MT", "Gothic", serif;
+            font-size: 48px;
+            color: #8b0000;
+            text-align: center;
+            opacity: 0;
+            text-shadow: 
+                0 0 5px #8b0000,
+                0 0 10px #8b0000,
+                0 0 15px #600000,
+                0 0 20px #400000;
+            letter-spacing: 3px;
+            line-height: 1.3;
+            padding: 0 20px;
+            transform: scale(0.9);
+        }
+        
+        /* 字体回退方案 */
+        @import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');
+        
+        .chapter-text {
+            font-family: 'UnifrakturMaguntia', "Old English Text MT", "Gothic", serif;
+        }
+
+        /* 电脑屏幕背景 - 暗色调房间 */
+        .room-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            z-index: 1;
+        }
+
+        /* 游戏标题 */
+        .game-title {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+            letter-spacing: 2px;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .game-title.show {
+            opacity: 1;
+        }
+
+        /* 查看地图按钮样式 - 固定在左上角，提高层级 */
+        .map-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            border: 2px solid #ff6b6b;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            z-index: 999;
+            display: none;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .map-link.show {
+            display: inline-block;
+        }
+
+        .map-link:hover {
+            background-color: rgba(255, 107, 107, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+
+        /* 整个手机界面 */
+        .game-container {
+            width: 350px;
+            height: 700px;
+            background: #111;
+            border-radius: 40px;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+            padding: 15px;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+            margin-top: -30px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .game-container.show {
+            opacity: 1;
+        }
+
+        /* 手机屏幕内容 */
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            height: 25px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .time { font-weight: bold; }
+        .battery { color: #4cd964; }
+        .battery::after {
+            content: "⚡";
+            margin-left: 4px;
+        }
+
+        /* 直播准备界面 */
+        .live-prepare {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .live-prepare-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #ff6b6b;
+            margin-bottom: 20px;
+            object-fit: cover;
+        }
+
+        .live-prepare-id {
+            color: #ff6b6b;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .live-prepare-title {
+            color: #fff;
+            font-size: 16px;
+            text-align: center;
+            line-height: 1.5;
+            margin-bottom: 40px;
+            padding: 0 10px;
+        }
+
+        .start-live-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .start-live-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 71, 87, 0.6);
+        }
+
+        .start-live-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* 直播主内容区 */
+        .live-content {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.8s ease-in;
+        }
+        .live-content.show {
+            opacity: 1;
+        }
+
+        /* 直播摄像头画面 - 林晚晴的脸 */
+        .live-camera-view {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 5;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        /* 主播头像（摄像头画面中的林晚晴） */
+        .live-camera-view img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 30%;
+        }
+
+        /* 直播信息覆盖层 */
+        .live-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* 主播信息（左上角） */
+        .host-info-overlay {
+            position: absolute;
+            top: 30px;
+            left: 15px;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .host-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid #ff6b6b;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+
+        .host-name {
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* 弹幕区域 */
+        .danmu-area {
+            position: absolute;
+            top: 80px;
+            left: 15px;
+            width: 70%;
+            height: 60%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: column-reverse;
+            z-index: 15;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 107, 107, 0.3) transparent;
+        }
+
+        .danmu-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .danmu-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .danmu-area::-webkit-scrollbar-thumb {
+            background: rgba(255, 107, 107, 0.5);
+            border-radius: 3px;
+        }
+
+        /* 弹幕样式 - 统一黑色背景 */
+        .danmu {
+            color: white;
+            font-size: 14px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            word-break: break-word;
+            line-height: 1.4;
+            transition: opacity 0.3s;
+            max-width: 90%;
+            align-self: flex-start;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .danmu.fading {
+            opacity: 0.3;
+        }
+
+        /* NEW弹幕提示 */
+        .new-danmu-indicator {
+            position: absolute;
+            top: 70px;
+            right: 15px;
+            background: rgba(255, 107, 107, 0.9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 20;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        .new-danmu-indicator.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 在线人数显示 */
+        .viewer-count {
+            position: absolute;
+            top: 30px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #ff6b6b;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 20;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        /* 底部文本框样式（参考gate.html） */
+        .bottom-dialog-box {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px;
+            border-top: 2px solid #8B0000;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .bottom-dialog-box.show {
+            opacity: 1;
+        }
+        .bottom-dialog-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #DC143C;
+            font-weight: bold;
+        }
+
+        .bottom-dialog-header .mic-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #DC143C;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+        }
+
+        .bottom-dialog-text {
+            color: #FFF8DC;
+            line-height: 1.6;
+            font-size: 16px;
+            padding: 5px 0;
+        }
+
+        /* 继续提示 */
+        .continue-hint {
+            color: #FFD700;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* 点击区域 */
+        .click-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            cursor: pointer;
+            pointer-events: none;
+        }
+        .click-area.active {
+            pointer-events: auto;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <!-- 添加音频元素 -->
+    <audio id="bgm-audio" loop>
+        <source src="res/直播音频.mp3" type="audio/mpeg">
+        您的浏览器不支持音频播放
+    </audio>
+    
+    <div class="room-background"></div>
+    <div class="chapter-transition" id="chapter-transition">
+        <div class="chapter-text" id="chapter-text">再见了，我的老同学们</div>
+    </div>
+    <div class="game-title" id="game-title">纸怨 - 直播开场</div>
+    <a href="map.html" class="map-link" id="map-link">查看地图</a>
+    <div class="game-container" id="game-container">
+        <div class="phone-screen">
+            <div class="status-bar">
+                <div class="time">19:43</div>
+                <div class="network">5G</div>
+                <div class="battery">87%</div>
+            </div>
+            <div class="live-prepare" id="live-prepare">
+                <img src="res/林晚晴.png" alt="林晚晴" class="live-prepare-avatar">
+                <div class="live-prepare-id">晚晴不晚</div>
+                <div class="live-prepare-title">【重返高中母校！真人恐怖剧本杀】</div>
+                <button class="start-live-btn" id="start-live-btn">开始直播</button>
+            </div>
+            <div class="live-content" id="live-content">
+                <div class="live-camera-view">
+                    <img src="res/林晚晴.png" alt="林晚晴直播" id="live-face">
+                </div>
+                <div class="live-overlay">
+                    <div class="host-info-overlay">
+                        <img src="res/林晚晴.png" alt="林晚晴" class="host-avatar">
+                        <div class="host-name">晚晴不晚</div>
+                    </div>
+                    <div class="danmu-area" id="danmu-container"></div>
+                    <div class="new-danmu-indicator" id="new-danmu-indicator">
+                        新弹幕 <span id="new-count">0</span>+
+                    </div>
+                    <div class="viewer-count">在线：<span id="viewer-num">8,214</span>人</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-dialog-box" id="bottom-dialog">
+        <div class="bottom-dialog-header">
+            <span class="mic-icon">🎤</span>
+            林晚晴
+        </div>
+        <div class="bottom-dialog-text" id="dialog-content"></div>
+        <div class="continue-hint">点击屏幕任意位置继续</div>
+    </div>
+    <div class="click-area" id="click-area"></div>
+
+    <script>
+        // 数据配置
+        const liveData = {
+            randomDanmuPool: [
+                "晚晚老婆我来啦~", "主播晚上好", "晚晚今天好美！", "这是什么直播？", "恐怖剧本杀？刺激！", 
+                "晚晚好可爱", "关注了关注了", "礼物走一波", "背景好暗啊", "主播在哪里？", 
+                "这个校门有点眼熟", "害怕但又想看", "晚晚声音好好听", "支持晚晚！", "剧本杀开始了吗？", 
+                "在线人数好多", "新来的求科普", "这个布景好真实", "晚晚加油！", "期待后续", 
+                "不敢看但想看", "晚晚最美！", "这个直播有意思", "继续继续", "关注点起来"
+            ],
+            dialogues: [
+                {
+                    host: "宝宝们晚上好！今晚上给大家来个特别直播！猜猜是什么呢？",
+                    danmus: ["晚晚老婆我来啦~", "主播晚上好，晚晚今天好美！", "晚晚周围好黑啊，这是在哪？"]
+                },
+                {
+                    host: "好啦~不卖关子了，今天晚晚要带你们回到我的高中母校。据说这里七年前有个女生跳楼，一直在闹鬼，害的我们母校只能搬走，明天就要拆迁了。",
+                    danmus: ["直播标题暴露了你（doge）", "哇塞！真人恐怖剧本杀！这么刺激？！"]
+                },
+                {
+                    host: "谢谢大家送的礼物~不过大家别害怕，今晚我们有五位老同学聚在一起，誓要揪出是谁在装神弄鬼！凶手就在我们当中哦~刚进直播间的宝宝们记得给晚晚点点关注~看主播带你们抓出凶手！",
+                    danmus: ["真的假的啊？大手笔啊，为了这个剧本杀还特意找了场地吗？", "已经开始了吗？这么沉浸吗？", "刚来，这是什么情况？晚晚要改行了？我还想看主播辣舞来着（可惜）", "今天居然是恐怖part？期待住了", "就晚晚一个人吗？还有谁啊？", "快进到主播被吓哭！", "胆小人士不敢看了", "晚晚别怕，怕的话躲我怀里（猥琐笑）", "不会是来搞噱头吧"],
+                    isLast: true 
+                }
+            ]
+        };
+
+        // 全局状态管理
+        let state = {
+            currentDialogIndex: 0, 
+            viewerCount: 8214,
+            isLiveComplete: false,
+            newDanmuCount: 0,
+            isScrollingDanmu: false,
+            isLiveStarted: false,
+            danmuInterval: null,
+            isTransitioning: true,
+            bgmPlayed: false // 新增：标记BGM是否已播放
+        };
+
+        // 全局jQuery选择器
+        const $danmuContainer = $('#danmu-container');
+        const $newDanmuIndicator = $('#new-danmu-indicator');
+        const $newCount = $('#new-count');
+        const $viewerNum = $('#viewer-num');
+        const $bottomDialog = $('#bottom-dialog');
+        const $dialogContent = $('#dialog-content');
+        const $mapLink = $('#map-link');
+        const $continueHint = $('.continue-hint');
+        const $liveContent = $('#live-content');
+        const $livePrepare = $('#live-prepare');
+        const $clickArea = $('#click-area');
+        const $gameTitle = $('#game-title');
+        const $gameContainer = $('#game-container');
+        const $chapterTransition = $('#chapter-transition');
+        const $chapterText = $('#chapter-text');
+        const $bgmAudio = $('#bgm-audio'); // 新增：音频元素选择器
+
+        // 页面加载后执行
+        $(document).ready(function() {
+            initLive();
+            showChapterTransition();
+        });
+
+        // 章节过渡动画
+        function showChapterTransition() {
+            // 文字渐现
+            setTimeout(() => {
+                $chapterText.css({
+                    'opacity': '1',
+                    'transform': 'scale(1)',
+                    'transition': 'all 1.5s ease-out'
+                });
+            }, 100);
+            
+            // 1.5秒后渐隐，显示游戏界面
+            setTimeout(() => {
+                $chapterText.css({
+                    'opacity': '0',
+                    'transform': 'scale(1.1)',
+                    'transition': 'all 1s ease-in'
+                });
+                
+                setTimeout(() => {
+                    $chapterTransition.addClass('hide');
+                    state.isTransitioning = false;
+                    $gameTitle.addClass('show');
+                    $gameContainer.addClass('show');
+                }, 1000);
+            }, 1500);
+        }
+
+        // 播放背景音乐
+        function playBGM() {
+            // 防止重复播放
+            if (state.bgmPlayed) return;
+            
+            // 处理浏览器自动播放策略
+            const audio = $bgmAudio[0];
+            audio.volume = 0.7; // 设置音量（0-1）
+            audio.play().catch(err => {
+                console.log('自动播放失败，需要用户交互:', err);
+                // 备用方案：监听第一次点击后播放
+                $(document).one('click', () => {
+                    audio.play();
+                });
+            });
+            
+            state.bgmPlayed = true;
+        }
+
+        // 开始直播
+        function startRealLive() {
+            if (state.isLiveStarted || state.isTransitioning) return;
+            
+            // 新增：播放背景音乐
+            playBGM();
+            
+            $livePrepare.css({
+                'opacity': '0',
+                'transform': 'scale(0.95)',
+                'pointer-events': 'none',
+                'transition': 'all 0.8s ease-out'
+            });
+            $liveContent.addClass('show');
+            $clickArea.addClass('active');
+            state.isLiveStarted = true;
+            
+            setTimeout(() => {
+                $bottomDialog.addClass('show');
+            }, 300);
+            
+            showHostDialog(0);
+            simulateFastViewerGrowth();
+            
+            // 启动随机弹幕定时器 - 全程不停止
+            state.danmuInterval = setInterval(() => {
+                createRandomDanmu();
+            }, 800);
+        }
+
+        // 显示主播台词和对应弹幕
+        function showHostDialog(index) {
+            if (index >= liveData.dialogues.length) return;
+            const current = liveData.dialogues[index];
+            $dialogContent.text(current.host);
+            
+            // 刷对应弹幕
+            current.danmus.forEach((danmu, i) => {
+                setTimeout(() => addDanmu(danmu), i * 200);
+            });
+        }
+
+        // 添加单条弹幕 - 核心函数
+        function addDanmu(content) {
+            const $danmuElement = $('<div>').addClass('danmu').text(content);
+            $danmuContainer.prepend($danmuElement);
+            
+            // 限制弹幕数量，超过15条自动删除最旧的
+            if ($danmuContainer.children().length > 15) {
+                $danmuContainer.children().last().remove();
+            }
+            
+            // 新弹幕提示逻辑
+            if (state.isScrollingDanmu) {
+                state.newDanmuCount++;
+                $newCount.text(state.newDanmuCount);
+                $newDanmuIndicator.addClass('show');
+            } else {
+                $danmuContainer.scrollTop(0);
+            }
+        }
+
+        // 生成随机弹幕
+        function createRandomDanmu() {
+            const content = liveData.randomDanmuPool[Math.floor(Math.random() * liveData.randomDanmuPool.length)];
+            addDanmu(content);
+        }
+
+        // 在线人数增长
+        function simulateFastViewerGrowth() {
+            const growthInterval = setInterval(() => {
+                const growthRate = Math.floor(Math.random() * 2000) + 1000;
+                state.viewerCount += growthRate;
+                $viewerNum.text(state.viewerCount >= 10000 
+                    ? (state.viewerCount / 10000).toFixed(1) + '万' 
+                    : state.viewerCount.toLocaleString());
+            }, 300);
+        }
+
+        // 滚动到最新弹幕
+        function scrollToNewestDanmu() {
+            $danmuContainer.scrollTop(0);
+            state.isScrollingDanmu = false;
+            state.newDanmuCount = 0;
+            $newCount.text(0);
+            $newDanmuIndicator.removeClass('show');
+        }
+
+        // 处理弹幕滚动事件
+        function handleDanmuScroll() {
+            const container = $danmuContainer[0]; 
+            state.isScrollingDanmu = container.scrollHeight - container.scrollTop > container.clientHeight + 10;
+        }
+
+        // 处理点击继续
+        function handleDialogClick(e) {
+            if ($(e.target).closest('.map-link').length) return;
+            if (!state.isLiveStarted) return;
+            
+            const nextIndex = state.currentDialogIndex + 1;
+            if (nextIndex < liveData.dialogues.length) {
+                showHostDialog(nextIndex);
+                state.currentDialogIndex = nextIndex;
+                
+                if (liveData.dialogues[nextIndex].isLast) {
+                    $mapLink.addClass('show');
+                    $continueHint.text("点击左上角查看地图");
+                    state.isLiveComplete = true;
+                    // 移除定时器清除逻辑，弹幕持续滚动
+                }
+            }
+        }
+
+        // 初始化事件绑定
+        function initLive() {
+            // 开始直播按钮
+            $('#start-live-btn').on('click', startRealLive);
+            
+            // 点击继续
+            $clickArea.on('click', handleDialogClick);
+            
+            // 新弹幕提示点击
+            $newDanmuIndicator.on('click', scrollToNewestDanmu);
+            
+            // 弹幕滚动监听
+            $danmuContainer.on('scroll', handleDanmuScroll);
+
+            // 页面卸载时再清除定时器，避免内存泄漏
+            $(window).on('beforeunload', function() {
+                if (state.danmuInterval) clearInterval(state.danmuInterval);
+            });
+        }
+    </script>
+</body>
+</html>

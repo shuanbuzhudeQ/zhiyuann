@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纸怨——监控室</title>
+    <link rel="stylesheet" href="css/main.css">
+    
+    <style>
+        /* ==================== 场景特有样式 ==================== */
+        /* 场景容器样式调整 */
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 人物立绘容器 - 调整高度占屏幕更多 */
+        .character-avatar-container {
+            position: absolute;
+            bottom: 0; /* 改为0，让容器底部贴着屏幕底边 */
+            width: 100%;
+            height: 70%; /* 增加立绘容器高度到70% */
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        /* 人物立绘 - 增大尺寸 */
+        .character-avatar-img {
+            position: absolute;
+            bottom: 0; /* 改为0，让立绘底部贴着容器底部 */
+            max-height: 100%; /* 改为100%，让立绘可以占满容器高度 */
+            max-width: 60%; /* 增加最大宽度到60% */
+            width: auto; /* 添加这个 */
+            height: auto; /* 添加这个 */
+            object-fit: contain;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+        }
+        
+        /* 人物立绘在左侧 */
+        .character-left {
+            left: 5%;
+        }
+        
+        /* 人物立绘在右侧 */
+        .character-right {
+            right: 5%;
+        }
+        
+        /* 对话框容器 - 调整高度 */
+        .dialogue-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%; /* 减小对话框容器高度到30%，给立绘更多空间 */
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            pointer-events: none;
+        }
+        
+        /* 对话框 */
+        .dialogue-box {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #4ecdc4;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0 20px 20px 20px;
+            min-height: 120px;
+            max-height: 180px; /* 限制最大高度 */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            overflow-y: auto; /* 添加滚动条 */
+            overflow-x: hidden;
+        }
+        
+        /* 对话框滚动条样式 */
+        .dialogue-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .dialogue-box::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .dialogue-box::-webkit-scrollbar-thumb {
+            background: #4ecdc4;
+            border-radius: 4px;
+        }
+        
+        .dialogue-box::-webkit-scrollbar-thumb:hover {
+            background: #3abbb2;
+        }
+        
+        /* 对话框标题 */
+        .dialogue-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .title-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        /* 对话框文本 */
+        .dialogue-text {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        
+        /* 对话框提示 */
+        .dialogue-hint {
+            text-align: right;
+            font-size: 14px;
+            color: #ffcc00;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        
+        /* 旁白框样式 */
+        .narration-box {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #4ecdc4;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0 20px 20px 20px;
+            min-height: 120px;
+            max-height: 180px; /* 限制最大高度 */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            overflow-y: auto; /* 添加滚动条 */
+            overflow-x: hidden;
+        }
+        
+        /* 旁白框滚动条样式 */
+        .narration-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .narration-box::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .narration-box::-webkit-scrollbar-thumb {
+            background: #4ecdc4;
+            border-radius: 4px;
+        }
+        
+        .narration-box::-webkit-scrollbar-thumb:hover {
+            background: #3abbb2;
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* 场景背景图片 */
+        .scene-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        /* ==================== 动画关键帧 ==================== */
+        /* 立绘淡入动画 */
+        @keyframes avatarFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 对话框淡入动画 */
+        @keyframes dialogueFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 直播间抖动动画 */
+        @keyframes gentleShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            50% { transform: translateX(2px); }
+            75% { transform: translateX(-1px); }
+        }
+        
+        @keyframes moderateShake {
+            0%, 100% { transform: translateX(0); }
+            15%, 45%, 75% { transform: translateX(-3px); }
+            30%, 60%, 90% { transform: translateX(3px); }
+        }
+        
+        .live-area.shaking {
+            animation: gentleShake 1.5s ease infinite;
+        }
+        
+        .live-area.moderate-shaking {
+            animation: moderateShake 1.2s ease infinite;
+        }
+        
+        /* 不同气氛的直播间样式 */
+        .live-area.normal {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-left: 3px solid #4ecdc4;
+        }
+        
+        .live-area.tense {
+            background: linear-gradient(135deg, #2d132c 0%, #801336 100%);
+            border-left: 3px solid #ff6b6b;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.2);
+        }
+        
+        .live-area.critical {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d132c 100%);
+            border-left: 3px solid #ff3333;
+            box-shadow: 0 0 20px rgba(255, 50, 50, 0.3);
+        }
+        
+        .live-area.ending {
+            background: linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%);
+            border-left: 3px solid #4ecdc4;
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.2);
+        }
+        
+        /* 评论弹出动画 */
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px) scale(0.95);
+            }
+            70% {
+                opacity: 1;
+                transform: translateY(-3px) scale(1.02);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .comment.pop-in {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        /* 点击提示小环 */
+        .hint-circle {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 0, 0, 0.8);
+            border-radius: 50%;
+            pointer-events: auto;
+            cursor: pointer;
+            z-index: 30;
+            display: none;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .hint-circle.active {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+                transform: translate(-50%, -50%) scale(1);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(255, 0, 0, 0);
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+	<audio id="bgm" src="res/悬疑的小曲.mp3" loop preload="auto" 
+	       onloadeddata="this.volume=0.2"></audio>
+    <div class="game-container">
+        <a href="map.html" class="map-link">回到地图</a>
+        
+        <div class="scene-area scene-container">
+            <!-- 场景1：监控室 -->
+            <div class="scene" id="scene1">
+                <div class="scene-content">
+                    <!-- 背景图片 -->
+                    <img src="res/监控室.jpg" alt="监控室" class="scene-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="scene1-character-avatar-container"></div>
+                    
+                    <!-- 对话框容器 -->
+                    <div class="dialogue-container" id="scene1-dialogue-container"></div>
+                </div>
+            </div>
+            
+            <!-- 场景2：机关 -->
+            <div class="scene" id="scene2">
+                <div class="scene-content">
+                    <!-- 背景图片 -->
+                    <img src="res/机关.png" alt="机关" class="scene-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="scene2-character-avatar-container"></div>
+                    
+                    <!-- 对话框容器 -->
+                    <div class="dialogue-container" id="scene2-dialogue-container"></div>
+                </div>
+            </div>
+            
+            <!-- 场景3：监控室（返回） -->
+            <div class="scene" id="scene3">
+                <div class="scene-content">
+                    <!-- 背景图片 -->
+                    <img src="res/监控室.jpg" alt="监控室" class="scene-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="scene3-character-avatar-container"></div>
+                    
+                    <!-- 对话框容器 -->
+                    <div class="dialogue-container" id="scene3-dialogue-container"></div>
+                </div>
+            </div>
+            
+            <!-- 场景4：真相 -->
+            <div class="scene" id="scene4">
+                <div class="scene-content">
+                    <!-- 背景图片 -->
+                    <img src="res/真相.png" alt="真相" class="scene-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="scene4-character-avatar-container"></div>
+                    
+                    <!-- 对话框容器 -->
+                    <div class="dialogue-container" id="scene4-dialogue-container"></div>
+                </div>
+            </div>
+            
+            <!-- 场景5：通向天台 -->
+            <div class="scene" id="scene5">
+                <div class="scene-content">
+                    <!-- 背景图片 -->
+                    <img src="res/通向天台.png" alt="通向天台" class="scene-bg">
+                    
+                    <!-- 红圈指示区域 -->
+                    <div class="hint-circle" id="hint-circle-final-roof"></div>
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="scene5-character-avatar-container"></div>
+                    
+                    <!-- 对话框容器 -->
+                    <div class="dialogue-container" id="scene5-dialogue-container"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 直播评论区 -->
+        <div class="live-area normal" id="live-area">
+            <div class="live-header">
+                <h3 class="live-title">直播间评论区</h3>
+                <span class="viewer-count">在线人数: <span id="viewer-count">5123000</span></span>
+            </div>
+            
+            <div class="comment-area" id="comment-area">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 游戏状态管理 ====================
+        const gameState = {
+            currentScene: 1,
+            isDialogueActive: false,
+            currentDialogueIndex: 0,
+            hasStarted: false,
+            currentDialogueContainer: null,
+            shownComments: new Set(),
+            hasShownBurstComments: false,
+            isBurstingComments: false,
+            commentInterval: null,
+            currentAtmosphere: 'normal',
+            shouldStartShaking: false,
+            hasStartedShaking: false,
+            isScene4Revealing: false, // 场景4是否正在揭示真相
+            scene4TruthIndex: 0, // 场景4真相揭示的进度
+            scene4Truths: [ // 场景4要揭示的真相列表
+                '林晚晴因嫉妒和为了维持班级地位而主动发起的冷暴力和排挤；',
+                '赵健仗着体格和力量的差距进行的肢体推搡与侮辱；',
+                '孙薇薇出于嫉妒和跟风散布的恶毒谣言以及趁对方不注意将人锁在厕所行为；',
+                '王鹏因懦弱而选择的袖手旁观与沉默背弃；',
+                '李老师因强权压制选择了平息省事，压下真相。',
+                '以及……他们所有人共同营造的那令人窒息的孤立环境，如何将那个名叫苏筱芷、才华横溢却敏感内向的女孩，一步步推向绝望的深渊。'
+            ],
+            shouldContinueComments: true, // 是否应该继续刷评论
+            characters: {
+                '你': { position: 'right', color: '#4ecdc4' },
+                '林晚晴': { position: 'right', color: '#4ecdc4' },
+                '赵健': { position: 'left', color: '#ff6b6b' },
+                '王鹏': { position: 'left', color: '#95e1d3' },
+                '孙薇薇': { position: 'left', color: '#f8a5c2' },
+                '沈墨言': { position: 'right', color: '#778beb' }
+            },
+            currentCharacter: null,
+            currentAvatar: null,
+            clickCallback: null,
+            isWaitingForClick: false
+        };
+        
+        // ==================== DOM元素引用 ====================
+        const elements = {
+            commentArea: document.getElementById('comment-area'),
+            viewerCount: document.getElementById('viewer-count'),
+            hintCircleFinalRoof: document.getElementById('hint-circle-final-roof'),
+            liveArea: document.getElementById('live-area')
+        };
+        
+        // ==================== 直播气氛系统 ====================
+        function changeAtmosphere(newAtmosphere) {
+            if (gameState.currentAtmosphere === newAtmosphere) return;
+            
+            gameState.currentAtmosphere = newAtmosphere;
+            
+            // 移除所有气氛类
+            elements.liveArea.classList.remove('normal', 'tense', 'critical', 'ending');
+            // 移除所有震动类
+            elements.liveArea.classList.remove('shaking', 'moderate-shaking');
+            
+            // 添加新的气氛类
+            elements.liveArea.classList.add(newAtmosphere);
+            
+            // 场景4开始揭示真相时开始震动
+            if (newAtmosphere === 'critical' && !gameState.hasStartedShaking) {
+                elements.liveArea.classList.add('shaking');
+                gameState.hasStartedShaking = true;
+            }
+            
+            // 场景5时减慢震动
+            if (newAtmosphere === 'ending') {
+                elements.liveArea.classList.remove('shaking');
+                elements.liveArea.classList.add('moderate-shaking');
+            }
+        }
+        
+        // ==================== 敏感词过滤函数 ====================
+        function filterSensitiveWords(text) {
+            // 定义敏感词和替换词
+            const sensitiveWords = {
+                '死': '**',
+                '死全家': '***',
+                '去死': '***',
+                '该死': '***',
+                '人渣': '**',
+                '垃圾': '**',
+                '畜生': '**',
+                '狗东西': '***',
+                '下地狱': '***',
+                '坐牢': '**',
+                '判刑': '**',
+                '杀人犯': '***',
+                '凶手': '**',
+                '恶霸': '**',
+                '蛇蝎': '**',
+                '冷血': '**'
+            };
+            
+            let filteredText = text;
+            for (const [word, replacement] of Object.entries(sensitiveWords)) {
+                const regex = new RegExp(word, 'g');
+                filteredText = filteredText.replace(regex, replacement);
+            }
+            
+            return filteredText;
+        }
+        
+        // ==================== 弹幕内容 ====================
+        const commentsData = {
+            monitor_room: [
+                { user: '监控狂魔', text: '卧槽！全在监控下？！' },
+                { user: '细思极恐', text: '我们看到的也是直播画面？' },
+                { user: '技术宅', text: '这监控系统太专业了' },
+                { user: '网友5432', text: '全是直播回放！' },
+                { user: '网友7654', text: '沈墨言早就计划好了' },
+                { user: '网友6543', text: '细思极恐啊' },
+                { user: '网友5432', text: '太吓人了' },
+                { user: '网友4321', text: '这一切都是安排好的' },
+                { user: '网友3210', text: '林晚晴的直播间也在！' },
+                { user: '网友2109', text: '百万观众看着呢' }
+            ],
+            reveal_truth: [
+                { user: '正义网友', text: '百万主播竟是校园**者！' },
+                { user: '吃瓜群众', text: '人血馒头好吃吗？' },
+                { user: '失望粉丝', text: '取关了！没想到你是这种人' },
+                { user: '网友0987', text: '真相大白了！' },
+                { user: '网友7890', text: '校园暴力者该死！' },
+                { user: '网友8901', text: '终于等到了真相' },
+                { user: '网友9012', text: '林晚晴滚出直播界！' },
+                { user: '网友1234', text: '孙薇薇也不是好人！' },
+                { user: '网友2345', text: '赵健暴力分子！' },
+                { user: '网友3456', text: '王鹏沉默也是罪！' }
+            ],
+            final_reveal: [
+                { user: '真相大白', text: '原来七年前是这样！' },
+                { user: '震惊党', text: '四个人都有责任！' },
+                { user: '正义使者', text: '李老师也有错！' },
+                { user: '网友4567', text: '苏筱芷太可怜了' },
+                { user: '网友5678', text: '七年的冤案啊' },
+                { user: '网友6789', text: '所有人都该负责' },
+                { user: '网友7890', text: '正义虽迟但到' },
+                { user: '网友8901', text: '这就是报应' },
+                { user: '网友9012', text: '现在知道后悔了' },
+                { user: '网友0123', text: '早知今日何必当初' }
+            ],
+            ending: [
+                { user: '天台恐惧', text: '天台！最后要去天台了！' },
+                { user: '结局党', text: '最终的审判要来了' },
+                { user: '紧张', text: '好紧张，会发生什么？' },
+                { user: '网友12345', text: '天台是终点吗？' },
+                { user: '网友23456', text: '苏筱芷跳楼的地方' },
+                { user: '网友34567', text: '轮回啊' },
+                { user: '网友45678', text: '七年后又回到这里' },
+                { user: '网友56789', text: '最后的审判' },
+                { user: '网友67890', text: '因果报应' },
+                { user: '网友78901', text: '结局是什么？' }
+            ],
+            continuous_comments: [
+                '林晚晴滚出直播界！',
+                '百万主播竟是校园**者！',
+                '人血馒头好吃吗？',
+                '孙薇薇也是**！',
+                '赵健打人最可恨！',
+                '王鹏的沉默也是罪！',
+                '四个人都该**！',
+                '苏筱芷太可怜了',
+                '七年前的冤案今天曝光！',
+                '网络正义虽迟但到！',
+                '报警抓林晚晴！',
+                '孙薇薇也该抓！',
+                '赵健暴力分子！',
+                '王鹏同罪处理！',
+                '林晚晴人设崩塌！'
+            ]
+        };
+        
+        // ==================== 人物立绘管理系统 ====================
+        function showAvatar(character, avatar, sceneNumber) {
+            const containerId = `scene${sceneNumber}-character-avatar-container`;
+            const container = document.getElementById(containerId);
+            
+            if (!container) return;
+            
+            // 清除现有立绘
+            container.innerHTML = '';
+            
+            if (!character || !avatar) return;
+            
+            const charConfig = gameState.characters[character];
+            if (!charConfig) return;
+            
+            const avatarImg = document.createElement('img');
+            avatarImg.className = `character-avatar-img ${charConfig.position === 'right' ? 'character-right' : 'character-left'}`;
+            avatarImg.src = avatar;
+            avatarImg.alt = character;
+            avatarImg.style.opacity = '0';
+            avatarImg.style.animation = 'avatarFadeIn 0.7s ease forwards';
+            
+            container.appendChild(avatarImg);
+            
+            // 设置淡入动画
+            setTimeout(() => {
+                avatarImg.style.opacity = '1';
+            }, 10);
+            
+            gameState.currentCharacter = character;
+            gameState.currentAvatar = avatar;
+        }
+        
+        function clearAvatar(sceneNumber) {
+            const containerId = `scene${sceneNumber}-character-avatar-container`;
+            const container = document.getElementById(containerId);
+            
+            if (container) {
+                container.innerHTML = '';
+            }
+            gameState.currentCharacter = null;
+            gameState.currentAvatar = null;
+        }
+        
+        // ==================== 核心函数：页面加载流程 ====================
+        function initializeCurrentScene() {
+            gameState.hasStarted = true;
+            gameState.currentScene = 1;
+            gameState.currentDialogueIndex = 0;
+            gameState.currentDialogueContainer = document.getElementById('scene1-dialogue-container');
+            
+            // 隐藏其他场景
+            for (let i = 2; i <= 5; i++) {
+                const scene = document.getElementById(`scene${i}`);
+                if (scene) scene.style.display = 'none';
+            }
+            
+            // 显示场景1
+            const scene1 = document.getElementById('scene1');
+            if (scene1) scene1.style.display = 'block';
+            
+            setTimeout(() => {
+                playCurrentSceneDialogue();
+            }, 100);
+        }
+        
+        // ==================== 点击等待机制 ====================
+        function waitForClick(callback) {
+            if (gameState.isWaitingForClick) return;
+            
+            gameState.isWaitingForClick = true;
+            gameState.clickCallback = callback;
+        }
+        
+        function handleSceneClick(event) {
+            // 检查是否点击了红圈或地图链接
+            if (event.target.closest('.map-link') ||
+                event.target.closest('.hint-circle')) {
+                return;
+            }
+            
+            if (gameState.isWaitingForClick && gameState.clickCallback) {
+                const callback = gameState.clickCallback;
+                gameState.isWaitingForClick = false;
+                gameState.clickCallback = null;
+                callback();
+            }
+        }
+        
+        // ==================== 红圈管理系统 ====================
+        function showFinalRoofHintCircle() {
+            const element = elements.hintCircleFinalRoof;
+            if (!element) return;
+            
+            const sceneId = `scene${gameState.currentScene}`;
+            const sceneElement = document.getElementById(sceneId);
+            const sceneContent = sceneElement ? sceneElement.querySelector('.scene-content') : null;
+            
+            if (!sceneContent) return;
+            
+            const sceneRect = sceneContent.getBoundingClientRect();
+            
+            // 设置位置（门中间）
+            const x = sceneRect.width * 0.5;
+            const y = sceneRect.height * 0.6;
+            
+            element.style.left = x + 'px';
+            element.style.top = y + 'px';
+            element.title = '点击前往天台';
+            element.style.display = 'block';
+            element.onclick = goToRoof2;
+            
+            setTimeout(() => {
+                element.classList.add('active');
+            }, 10);
+        }
+        
+        function goToRoof2() {
+            // 停止刷屏
+            gameState.shouldContinueComments = false;
+            if (gameState.commentInterval) {
+                clearInterval(gameState.commentInterval);
+                gameState.commentInterval = null;
+            }
+            window.location.href = "roof2.html";
+        }
+        
+        function hideAllHintCircles() {
+            if (elements.hintCircleFinalRoof) {
+                elements.hintCircleFinalRoof.classList.remove('active');
+                elements.hintCircleFinalRoof.style.display = 'none';
+            }
+        }
+        
+        // ==================== 场景切换和对话播放 ====================
+        function switchToScene(sceneNum) {
+            gameState.currentScene = sceneNum;
+            gameState.currentDialogueIndex = 0;
+            gameState.isScene4Revealing = false;
+            gameState.scene4TruthIndex = 0;
+            
+            // 隐藏所有场景
+            for (let i = 1; i <= 5; i++) {
+                const scene = document.getElementById(`scene${i}`);
+                if (scene) scene.style.display = 'none';
+            }
+            
+            // 显示当前场景
+            const currentScene = document.getElementById(`scene${sceneNum}`);
+            if (currentScene) {
+                currentScene.style.display = 'block';
+            }
+            
+            // 设置当前对话容器
+            gameState.currentDialogueContainer = document.getElementById(`scene${sceneNum}-dialogue-container`);
+            
+            hideAllHintCircles();
+            
+            // 清除当前立绘
+            clearAvatar(sceneNum);
+            
+            // 播放场景对话
+            setTimeout(() => {
+                playCurrentSceneDialogue();
+            }, 300);
+        }
+        
+        function playCurrentSceneDialogue() {
+            if (!gameState.currentDialogueContainer) return;
+            
+            const sceneKey = `scene${gameState.currentScene}`;
+            
+            gameState.currentDialogueContainer.innerHTML = '';
+            gameState.currentDialogueContainer.style.display = 'block';
+            gameState.currentDialogueContainer.style.opacity = '1';
+            
+            playSceneDialogue(sceneKey, gameState.currentDialogueContainer);
+        }
+        
+        function playSceneDialogue(sceneKey, container) {
+            const dialogues = getSceneDialogues(sceneKey);
+            if (!dialogues || gameState.currentDialogueIndex >= dialogues.length) {
+                return;
+            }
+            
+            const dialogue = dialogues[gameState.currentDialogueIndex];
+            
+            // 更新直播间气氛
+            if (dialogue.atmosphere) {
+                changeAtmosphere(dialogue.atmosphere);
+            }
+            
+            // 检查是否应该开始震动（场景4开始时）
+            if (sceneKey === 'scene4') {
+                gameState.shouldStartShaking = true;
+            }
+            
+            if (dialogue.commentKey && commentsData[dialogue.commentKey]) {
+                triggerComments(dialogue.commentKey);
+            }
+            
+            if (dialogue.type === 'narration') {
+                showNarrationDialogue(dialogue.content, container, sceneKey, dialogue.action);
+            } else if (dialogue.type === 'character') {
+                showCharacterDialogue(dialogue, container, sceneKey, dialogue.action);
+            }
+        }
+        
+        // ==================== 场景4真相揭示的特殊处理 ====================
+        function startScene4TruthReveal(container) {
+            if (gameState.isScene4Revealing) return;
+            
+            gameState.isScene4Revealing = true;
+            
+            // 开始评论刷屏
+            startContinuousComments();
+            
+            // 显示第一条真相
+            showNextScene4Truth(container);
+        }
+        
+        function showNextScene4Truth(container) {
+            if (!gameState.isScene4Revealing || gameState.scene4TruthIndex >= gameState.scene4Truths.length) {
+                // 所有真相揭示完毕，继续正常对话
+                gameState.isScene4Revealing = false;
+                gameState.currentDialogueIndex++; // 移动到下一条对话
+                playSceneDialogue('scene4', container);
+                return;
+            }
+            
+            const truth = gameState.scene4Truths[gameState.scene4TruthIndex];
+            
+            const narrationBox = document.createElement('div');
+            narrationBox.className = 'narration-box';
+            
+            narrationBox.innerHTML = `
+                <div class="dialogue-text">${truth}</div>
+                <div class="dialogue-hint">点击屏幕任意位置继续</div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(narrationBox);
+            
+            setTimeout(() => {
+                narrationBox.style.opacity = '1';
+                narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                
+                // 等待点击继续
+                waitForClick(() => {
+                    gameState.scene4TruthIndex++;
+                    
+                    // 继续下一条真相或结束
+                    showNextScene4Truth(container);
+                });
+            }, 10);
+        }
+        
+        // ==================== 对话系统 ====================
+        function getSceneDialogues(sceneKey) {
+            const sceneDialogues = {
+                scene1: [
+                    {
+                        type: 'narration',
+                        content: '门后是一个约二十平米的密室，或者说——监控中心。<br><br>墙壁上覆盖着数十块大大小小的液晶屏幕，无声地播放着画面：<br>校门你们相遇的实时回放。<br>中央广场纸飞机雨降下的俯拍。<br>厕所里你们狼狈失措的夜视模样。<br>……<br><br>你们今晚经历过的每一个角落，每一个惊恐、猜疑、崩溃的表情，都被清晰记录。<br><br>其中最大的一块屏幕上，赫然是你的直播间实时画面！此刻在线人数已经突破百万，弹幕疯狂滚动，早已从看热闹变成了对真相的震惊、愤怒与人肉搜索。<br><br>而在所有屏幕的正前方，背对着你们，坐在一张转椅上的，赫然是沈墨言。',
+                        commentKey: 'monitor_room',
+                        atmosphere: 'tense'
+                    },
+                    {
+                        type: 'narration',
+                        content: '听到声音，沈墨言缓缓转过椅子，脸上已经没了之前虚假诡异的微笑，只剩下冰冷的审视。'
+                    },
+                    {
+                        type: 'character',
+                        character: '沈墨言',
+                        text: '"欢迎来到后台，你们比我想象中来得要快……"他的声音清晰而漠然，"请尽情欣赏一下你们自己主演的……《忏悔录》。"',
+                        avatar: 'res/沈墨言.png'
+                    },
+                    {
+                        type: 'character',
+                        character: '赵健',
+                        text: '"沈墨言！你原来就在这——"赵健怒吼着就要冲上去。',
+                        avatar: 'res/赵健.png'
+                    },
+                    {
+                        type: 'character',
+                        character: '沈墨言',
+                        text: '"我劝你别动。"沈墨言甚至没有起身，只是按下了手边的一个按钮。',
+                        avatar: 'res/沈墨言.png',
+                        action: function(container) {
+                            // 等待点击后切换场景
+                            waitForClick(() => {
+                                setTimeout(() => {
+                                    switchToScene(2);
+                                }, 500);
+                            });
+                        }
+                    }
+                ],
+                scene2: [
+                    {
+                        type: 'narration',
+                        content: '赵健脚边的一块地板突然"咔哒"一声，弹起几根闪烁着蓝光的电击棒，滋滋的电流声让他硬生生止步。',
+                        commentKey: 'monitor_room',
+                        atmosphere: 'tense'
+                    },
+                    {
+                        type: 'character',
+                        character: '沈墨言',
+                        text: '"这里的一切，包括你们现在呼吸的空气，都在我的控制之下。"',
+                        avatar: 'res/沈墨言.png',
+                        action: function(container) {
+                            // 等待点击后切换场景
+                            waitForClick(() => {
+                                setTimeout(() => {
+                                    switchToScene(3);
+                                }, 500);
+                            });
+                        }
+                    }
+                ],
+                scene3: [
+                    {
+                        type: 'narration',
+                        content: '沈墨言站起身，走到那面最大的直播屏幕前，指着上面汹涌的弹幕。',
+                        commentKey: 'monitor_room',
+                        atmosphere: 'tense'
+                    },
+                    {
+                        type: 'character',
+                        character: '沈墨言',
+                        text: '"看，观众们已经等不及要真相了。‘百万主播竟是校园霸凌者’、‘人血馒头好吃吗’……啧啧，林晚晴，这不就是你梦寐以求的流量吗？"',
+                        avatar: 'res/沈墨言.png'
+                    },
+                    {
+                        type: 'narration',
+                        content: '你脸色难看，在显示屏里显得那么可怜、可笑……<br><br>你知道，你完了。你瘫坐在地上，失去所有力气和手段，无声痛哭。'
+                    },
+                    {
+                        type: 'character',
+                        character: '沈墨言',
+                        text: '沈墨言倏地转向你们，目光像手术刀："办公室里的东西，看完了？听完了？现在，还需要我帮你们回忆一下，七年前你们到底对苏筱芷做了什么吗？是怎么一步一步逼死了一个本来阳光积极的女孩儿吗？"',
+                        avatar: 'res/沈墨言.png',
+                        atmosphere: 'critical'
+                    },
+                    {
+                        type: 'narration',
+                        content: '孙薇薇瘫软在地，王鹏死死捂住了耳朵，你感到全身的血液都在变冷。',
+                        action: function(container) {
+                            // 等待点击后切换场景
+                            waitForClick(() => {
+                                setTimeout(() => {
+                                    switchToScene(4);
+                                }, 500);
+                            });
+                        }
+                    }
+                ],
+                scene4: [
+                    {
+                        type: 'narration',
+                        content: '沈墨言没有等你们回答。他调出了一段剪辑好的视频，结合李老师日志的关键页照片、成绩排名、你们当年在班级合影中的位置、以及一份抑郁症诊断书，用平静到残忍的语调，向数百万直播观众，清晰还原了当年发生的一切：',
+                        atmosphere: 'critical',
+                        action: function(container) {
+                            // 开始场景4的真相揭示流程
+                            startScene4TruthReveal(container);
+                        }
+                    },
+                    {
+                        type: 'narration',
+                        content: '最后，画面定格在一张天台坠落照上。<br><br>里面的女孩一身白衣，宛如一架纸飞机，轻飘飘地从天台坠下。<br><br>那么单薄、那么脆弱、那么孤独……'
+                    },
+                    {
+                        type: 'character',
+                        character: '沈墨言',
+                        text: '沈墨言的声音停顿了片刻，再响起时，带上了一丝不易察觉的哽咽："一定有人对她做了什么，才会成为她心中压死骆驼的最后一根稻草。"',
+                        avatar: 'res/沈墨言.png'
+                    },
+                    {
+                        type: 'narration',
+                        content: '直播弹幕彻底爆炸，服务器几近崩溃。你们的名字、曾经的信息正在被全网大肆传播、审判。'
+                    },
+                    {
+                        type: 'character',
+                        character: '沈墨言',
+                        text: '"现在，"沈墨言关掉了面向直播间的音频，只让画面继续，"游戏该结束了。今天是10月30日，是七年前她跳楼而死的那一晚上。最后的场景在天台，是七年前她跳下去的地方，也是……我为你们准备的‘终点’。<br><br> 四位主角，该前往天台了。"',
+                        avatar: 'res/沈墨言.png',
+                        commentKey: 'ending',
+                        atmosphere: 'ending',
+                        action: function(container) {
+                            // 等待点击后切换场景
+                            waitForClick(() => {
+                                setTimeout(() => {
+                                    switchToScene(5);
+                                    // 场景5时减慢刷屏速度
+                                    adjustCommentSpeed(1200);
+                                }, 500);
+                            });
+                        }
+                    }
+                ],
+                scene5: [
+                    {
+                        type: 'narration',
+                        content: '他推开门，门外是通往天台的楼梯。<br><br>你们别无选择。',
+                        atmosphere: 'ending',
+                        action: function(container) {
+                            // 等待点击后显示红圈
+                            waitForClick(() => {
+                                // 显示红圈
+                                showFinalRoofHintCircle();
+                                // 进一步减慢刷屏速度
+                                adjustCommentSpeed(1500);
+                            });
+                        }
+                    }
+                ]
+            };
+            
+            return sceneDialogues[sceneKey] || [];
+        }
+        
+        function showNarrationDialogue(content, container, sceneKey, actionCallback = null) {
+            // 清除立绘
+            clearAvatar(gameState.currentScene);
+            
+            const narrationBox = document.createElement('div');
+            narrationBox.className = 'narration-box';
+            
+            narrationBox.innerHTML = `
+                <div class="dialogue-text">${content}</div>
+                <div class="dialogue-hint">点击屏幕任意位置继续</div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(narrationBox);
+            
+            setTimeout(() => {
+                narrationBox.style.opacity = '1';
+                narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                
+                waitForClick(() => {
+                    gameState.currentDialogueIndex++;
+                    
+                    if (actionCallback && typeof actionCallback === 'function') {
+                        actionCallback(container);
+                    } else {
+                        playSceneDialogue(sceneKey, container);
+                    }
+                });
+            }, 10);
+        }
+        
+        function showCharacterDialogue(dialogue, container, sceneKey, actionCallback = null) {
+            // 显示人物立绘
+            if (dialogue.character && dialogue.avatar) {
+                showAvatar(dialogue.character, dialogue.avatar, gameState.currentScene);
+            }
+            
+            const charConfig = gameState.characters[dialogue.character];
+            const dialogueBox = document.createElement('div');
+            dialogueBox.className = 'dialogue-box';
+            dialogueBox.style.animation = 'dialogueFadeIn 0.5s ease';
+            
+            dialogueBox.innerHTML = `
+                <div class="dialogue-title">
+                    <span class="title-icon" style="background-color:${charConfig.color}"></span>
+                    ${dialogue.character}
+                </div>
+                <div class="dialogue-text">${dialogue.text}</div>
+                <div class="dialogue-hint">点击屏幕任意位置继续</div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(dialogueBox);
+            
+            setTimeout(() => {
+                dialogueBox.style.opacity = '1';
+                
+                waitForClick(() => {
+                    gameState.currentDialogueIndex++;
+                    
+                    if (actionCallback && typeof actionCallback === 'function') {
+                        actionCallback(container);
+                    } else {
+                        playSceneDialogue(sceneKey, container);
+                    }
+                });
+            }, 10);
+        }
+        
+        // ==================== 持续刷屏函数 ====================
+        function startContinuousComments() {
+            if (gameState.isBurstingComments || !gameState.shouldContinueComments) return;
+            
+            gameState.isBurstingComments = true;
+            
+            let commentCount = 0;
+            let currentSpeed = 700; // 初始速度700ms
+            
+            function addContinuousComment() {
+                if (!gameState.shouldContinueComments) {
+                    clearInterval(gameState.commentInterval);
+                    return;
+                }
+                
+                commentCount++;
+                
+                // 控制弹幕数量
+                if (elements.commentArea.children.length > 25) {
+                    // 移除最早的弹幕
+                    for (let i = 0; i < 2; i++) {
+                        if (elements.commentArea.firstChild) {
+                            elements.commentArea.removeChild(elements.commentArea.firstChild);
+                        }
+                    }
+                }
+                
+                const commentText = commentsData.continuous_comments[
+                    Math.floor(Math.random() * commentsData.continuous_comments.length)
+                ];
+                
+                // 过滤敏感词
+                const filteredText = filterSensitiveWords(commentText);
+                
+                const userNum = Math.floor(Math.random() * 10000);
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment pop-in';
+                commentDiv.innerHTML = `
+                    <div class="comment-user">网友${userNum}</div>
+                    <div>${filteredText}</div>
+                `;
+                
+                // 随机颜色和样式
+                const colors = [
+                    'rgba(255, 107, 107, 0.25)',
+                    'rgba(255, 60, 60, 0.3)',
+                    'rgba(220, 50, 50, 0.25)',
+                    'rgba(200, 40, 40, 0.3)'
+                ];
+                commentDiv.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                commentDiv.style.borderLeft = '2px solid #ff6b6b';
+                commentDiv.style.opacity = '0.9';
+                
+                elements.commentArea.appendChild(commentDiv);
+                
+                // 小幅增加在线人数
+                const currentCount = parseInt(elements.viewerCount.textContent);
+                if (Math.random() > 0.8 && commentCount % 5 === 0) {
+                    const increment = Math.floor(Math.random() * 30) + 5;
+                    elements.viewerCount.textContent = currentCount + increment;
+                }
+                
+                // 自动滚动到底部
+                elements.commentArea.scrollTop = elements.commentArea.scrollHeight;
+                
+                // 继续添加
+                setTimeout(addContinuousComment, currentSpeed);
+            }
+            
+            // 开始刷屏
+            setTimeout(addContinuousComment, currentSpeed);
+        }
+        
+        // 调整刷屏速度
+        function adjustCommentSpeed(newSpeed) {
+            // 重启刷屏以应用新速度
+            gameState.isBurstingComments = false;
+            setTimeout(() => {
+                startContinuousComments();
+            }, 100);
+        }
+        
+        // ==================== 评论管理系统 ====================
+        function triggerComments(commentKey) {
+            if (gameState.shownComments.has(commentKey)) {
+                return;
+            }
+            
+            if (!commentKey || !commentsData[commentKey]) {
+                return;
+            }
+            
+            gameState.shownComments.add(commentKey);
+            
+            // 缓慢输出评论
+            const comments = commentsData[commentKey];
+            let index = 0;
+            const speed = 500; // 500ms间隔
+            
+            function addNextComment() {
+                if (index >= comments.length) return;
+                
+                const comment = comments[index];
+                
+                // 过滤敏感词
+                const filteredText = filterSensitiveWords(comment.text);
+                
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment pop-in';
+                commentDiv.innerHTML = `
+                    <div class="comment-user">${comment.user}</div>
+                    <div>${filteredText}</div>
+                `;
+                elements.commentArea.appendChild(commentDiv);
+                
+                setTimeout(() => {
+                    commentDiv.style.animation = 'popIn 0.4s ease forwards';
+                }, 10);
+                
+                // 滚动到底部
+                elements.commentArea.scrollTop = elements.commentArea.scrollHeight;
+                
+                // 小幅增加在线人数
+                const currentCount = parseInt(elements.viewerCount.textContent);
+                const increment = Math.floor(Math.random() * 20) + 5;
+                elements.viewerCount.textContent = currentCount + increment;
+                
+                index++;
+                
+                if (index < comments.length) {
+                    setTimeout(addNextComment, speed);
+                }
+            }
+            
+            addNextComment();
+        }
+        
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+			// 新增：自动播放BGM
+			    const bgm = document.getElementById('bgm');
+			    // 处理浏览器自动播放策略（需要用户交互时的兼容）
+			    function playBGM() {
+			        bgm.play().catch(err => {
+			            console.log('自动播放失败，等待用户交互后播放:', err);
+			            // 监听用户第一次点击后播放
+			            document.addEventListener('click', function playOnClick() {
+			                bgm.play();
+			                document.removeEventListener('click', playOnClick);
+			            }, { once: true });
+			        });
+			    }
+			    playBGM();
+            // 添加全局点击事件监听
+            document.addEventListener('click', function(e) {
+                handleSceneClick(e);
+            });
+            
+            // 初始化当前场景
+            initializeCurrentScene();
+            
+            // 初始显示一些弹幕
+            setTimeout(() => {
+                const initialComments = [
+                    { user: '网友', text: '终于到监控室了！' },
+                    { user: '直播观众', text: '在线人数突破500万了！' },
+                    { user: '吃瓜群众', text: '这是要揭露真相了吗？' },
+                    { user: '期待已久', text: '等了这么久终于到高潮了！' },
+                    { user: '紧张刺激', text: '心跳加速中...' }
+                ];
+                
+                initialComments.forEach(comment => {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'comment pop-in';
+                    commentDiv.innerHTML = `
+                        <div class="comment-user">${comment.user}</div>
+                        <div>${comment.text}</div>
+                    `;
+                    elements.commentArea.appendChild(commentDiv);
+                });
+                
+                elements.commentArea.scrollTop = elements.commentArea.scrollHeight;
+            }, 500);
+        });
+    </script>
+</body>
+</html>

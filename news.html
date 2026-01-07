@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新闻通报 - "10·17废弃中学校园直播事件"</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            font-family: "微软雅黑", sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .news-wrapper {
+            width: 100%;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .news-container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            max-width: 1000px;
+            margin: 0 auto 50px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+            transition: opacity 0.5s ease;
+        }
+        
+        /* 新闻头部 */
+        .news-header {
+            text-align: center;
+            padding: 25px 40px;
+            background: linear-gradient(135deg, #1a5f7a 0%, #2a8cac 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .news-title {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .news-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .news-event-id {
+            color: #ffcc00;
+            font-weight: bold;
+            background-color: rgba(0,0,0,0.3);
+            padding: 8px 15px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-top: 10px;
+            border: 1px solid rgba(255,204,0,0.3);
+        }
+        
+        /* 选项卡头部样式 */
+        .news-tabs {
+            display: flex;
+            justify-content: flex-start;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0 20px;
+        }
+        
+        .news-tab {
+            padding: 15px 25px;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-bottom: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.3s;
+            margin-right: 5px;
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            bottom: -1px;
+        }
+        
+        .news-tab:hover {
+            background-color: #f8f9fa;
+            color: #1a5f7a;
+        }
+        
+        .news-tab.active {
+            background-color: white;
+            color: #1a5f7a;
+            font-weight: bold;
+            border-color: #dee2e6;
+            border-bottom-color: white;
+        }
+        
+        /* 新闻内容区域 */
+        .news-content {
+            padding: 30px 40px;
+            min-height: 500px;
+        }
+        
+        .news-section {
+            display: none;
+        }
+        
+        .news-section.active {
+            display: block;
+        }
+        
+        /* 内容区标题 */
+        .section-title {
+            color: #1a5f7a;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #4ecdc4;
+        }
+        
+        .section-title::before {
+            content: "▶";
+            color: #ff6b6b;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        /* 学校图片滚动容器 */
+        .school-carousel-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 25px 0 15px;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 5px solid white;
+            background: #000;
+        }
+        
+        .carousel-images {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4400px;
+            height: 100%;
+            display: flex;
+        }
+        
+        .carousel-image {
+            width: 1100px;
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        .image-caption {
+            margin-top: 12px;
+            color: #666;
+            font-size: 14px;
+            font-style: italic;
+            text-align: center;
+        }
+        
+        /* 表格样式 */
+        .personnel-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .personnel-table th {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            border: none;
+            font-weight: bold;
+        }
+        
+        .personnel-table td {
+            padding: 15px;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .personnel-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        /* 重要提示框 */
+        .important-note {
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+            border-left: 5px solid #ffc107;
+            padding: 25px;
+            margin: 30px 0 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        .important-note::before {
+            content: "⚠️";
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            font-size: 24px;
+            background: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* 第八项结语区域（不在选项卡内） */
+        .conclusion-section {
+            padding: 30px 40px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .conclusion-title {
+            color: #1a5f7a;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 25px 0;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #4ecdc4;
+        }
+        
+        .conclusion-title::before {
+            content: "八、";
+            color: #1a5f7a;
+        }
+        
+        /* 查看结语按钮区域 */
+        .next-page-link {
+            padding: 40px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            margin: 30px 40px;
+            border-top: 2px solid #4ecdc4;
+        }
+        
+        .next-page-link a {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.3);
+            border: none;
+        }
+        
+        .next-page-link a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+        }
+        
+        /* 页脚 */
+        .news-footer {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        /* 黑屏白字样式 */
+        .black-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease;
+            z-index: 100;
+        }
+        
+        .black-screen.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .black-screen h2 {
+            color: #fff;
+            font-size: 32px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+        }
+        
+        .black-screen p {
+            font-size: 22px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            max-width: 800px;
+            opacity: 0.9;
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        .back-link a {
+            display: inline-block;
+            padding: 18px 50px;
+            background-color: #4ecdc4;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            font-size: 20px;
+            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.4);
+        }
+        
+        .back-link a:hover {
+            background-color: #3db4ac;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.5);
+        }
+        
+        /* 移除之前的轮播控制样式 */
+		p{
+			text-indent: 2em;
+		}
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div id="news-wrapper" class="news-wrapper">
+        <div id="news-content" class="news-container">
+            <!-- 新闻头部 -->
+            <div class="news-header">
+                <h1 class="news-title">关于"10·17废弃XX中学校园直播事件"的调查与后续情况通报</h1>
+                <div class="news-subtitle">
+                    发布单位：XX市公安局、XX市教育局、XX市互联网信息办公室<br>
+                    发布时间：2025年10月30日 — 2026年3月（持续更新）
+                </div>
+                <div class="news-event-id">事件编号：XA-2025-1030</div>
+            </div>
+            
+            <!-- 选项卡头部（只有1-7项） -->
+            <div class="news-tabs">
+                <div id="tab1" class="news-tab active">事件基本情况</div>
+                <div id="tab2" class="news-tab">涉案人员信息</div>
+                <div id="tab3" class="news-tab">事件动机与旧案关联</div>
+                <div id="tab4" class="news-tab">调查进展与司法处理</div>
+                <div id="tab5" class="news-tab">涉事人员现状</div>
+                <div id="tab6" class="news-tab">相关单位处理</div>
+                <div id="tab7" class="news-tab">社会舆论与讨论</div>
+            </div>
+            
+            <!-- 新闻内容区域（只有1-7项） -->
+            <div class="news-content">
+                <!-- 第一部分：事件基本情况（包含图片滚动） -->
+                <div id="section1" class="news-section active">
+                    <h2 class="section-title">一、事件基本情况</h2>
+                    <p>2025年10月17日晚，我市原XX中学废弃校区内发生一起利用网络直播实施的非法拘禁、恐吓及严重侵犯隐私事件。事件通过主播林某晴的直播间实时传播，峰值在线人数突破500万，引发社会广泛关注与舆情震荡。</p>
+                    
+                    <!-- 学校图片滚动 -->
+                    <div class="school-carousel-container">
+                        <div class="carousel-images" id="list">
+                            <img src="res/学校.jpg" alt="涉事学校外观" class="carousel-image">
+                            <img src="res/学校厕所.jpg" alt="学校废弃厕所" class="carousel-image">
+                            <img src="res/学校教室.jpg" alt="学校废弃教室" class="carousel-image">
+                            <img src="res/学校天台.png" alt="学校废弃天台" class="carousel-image">
+                        </div>
+                    </div>
+                    <div class="image-caption">图：原XX中学废弃校区（自动滚动展示）</div>
+                </div>
+                
+                <!-- 第二部分：涉案人员信息 -->
+                <div id="section2" class="news-section">
+                    <h2 class="section-title">二、涉案人员信息</h2>
+                    <table class="personnel-table">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>年龄</th>
+                                <th>身份</th>
+                                <th>在事件中的角色</th>
+                                <th>当前状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>沈某言</td>
+                                <td>26岁</td>
+                                <td>无业</td>
+                                <td>事件策划与实施者</td>
+                                <td>在逃（2025.12月已抓获）</td>
+                            </tr>
+                            <tr>
+                                <td>林某晴</td>
+                                <td>26岁</td>
+                                <td>网络主播</td>
+                                <td>被侵害方/直播主体</td>
+                                <td>接受调查，账号封禁</td>
+                            </tr>
+                            <tr>
+                                <td>赵某健</td>
+                                <td>26岁</td>
+                                <td>健身教练</td>
+                                <td>被侵害方</td>
+                                <td>接受调查，已被解雇</td>
+                            </tr>
+                            <tr>
+                                <td>孙某薇</td>
+                                <td>26岁</td>
+                                <td>个体经营</td>
+                                <td>被侵害方</td>
+                                <td>接受调查，店铺关闭</td>
+                            </tr>
+                            <tr>
+                                <td>王某鹏</td>
+                                <td>26岁</td>
+                                <td>外卖员</td>
+                                <td>被侵害方</td>
+                                <td>接受调查，仍在职</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 第三部分：事件动机与旧案关联 -->
+                <div id="section3" class="news-section">
+                    <h2 class="section-title">三、事件动机与旧案关联</h2>
+					<br/>
+                    <p>经查，该事件与2018年10月30日发生于同一校区的学生<span style="font-weight: bold;">苏某芷</span>（女，殁年17岁）坠亡事件直接相关。</p>
+					<br/><br/>
+                    <p><strong>苏某芷案背景：</strong>苏某芷生前曾长期遭受班级同学的精神暴力与孤立。当年警方调查认定为自杀，未刑事立案。</p>
+                    <br/><br/>
+					<p><strong>沈某言动机：</strong>作为当年班长，沈某言对调查结果存疑，长期心理失衡，遂策划此次"沉浸式剧本杀"，意图通过公开直播方式迫使林某晴等人"忏悔"。</p>
+                    <br/><br/>
+					<p><strong>手段：</strong>沈某言提前数月布置机关、监控设备，伪造邀请函，诱骗四人至现场，并利用旧录音、旧资料进行心理施压。</p>
+                </div>
+                
+                <!-- 第四部分：调查进展与司法处理 -->
+                <div id="section4" class="news-section">
+                    <h2 class="section-title">四、调查进展与司法处理</h2>
+                    <h3>（一）沈某言（主要策划者）</h3>
+                    <p>2025.12月初在邻省被捕，随身物品中发现大量与苏某芷案相关的资料。</p><br/>
+                    <p><strong>司法鉴定：</strong>具备完全刑事责任能力，但患有创伤后应激障碍（PTSD）。</p><br/>
+                    <p><strong>起诉罪名：</strong>非法拘禁罪、寻衅滋事罪、侵犯公民个人信息罪等。</p><br/>
+                    <p><strong>案件状态：</strong>已提起公诉，目前仍在审理中。</p>
+                    <h3>（二）林某晴、赵某健、孙某薇、王某鹏</h3>
+                    <p>四人作为被侵害方，已接受警方保护性询问与心理干预。</p><br/>
+                    <p>针对七年前可能涉及的精神暴力行为，警方仍在依法评估中。</p><br/>
+                    <p>四人均面临不同程度的舆论压力与社会后果。</p>
+                </div>
+                
+                <!-- 第五部分：涉事人员现状 -->
+                <div id="section5" class="news-section">
+                    <h2 class="section-title">五、涉事人员现状与社会影响</h2>
+                    <p><strong>林某晴</strong>，其账号"晚晴不晚"永久封禁，所有商业合作终止，面临违约金赔付，其家族企业"林氏集团"股价暴跌，业务停滞。当事人已离开原城市。</p>
+                    <br/>
+					<p><strong>赵某健</strong>，被健身房解雇，业内声誉尽毁。其过往暴力记录被翻出，警方进一步核查中。当事人目前失业。</p>
+                    <br/>
+					<p><strong>孙某薇</strong>，其账号"薇薇要努力鸭"永久关闭，其下经营的洗衣店关闭。涉嫌造谣他人，可能面临民事诉讼。当事人现已搬离原住处。</p>
+                    <br/>
+					<p><strong>王某鹏</strong>，外卖工作未直接受影响，舆论对其态度复杂。当事人仍在职，曾试图公开致歉被劝阻。</p>
+                </div>
+                
+                <!-- 第六部分：相关单位处理 -->
+                <div id="section6" class="news-section">
+                    <h2 class="section-title">六、相关单位处理情况</h2>
+                    <h3>（一）涉事学校与原班主任</h3><br/>
+                    <p>原XX中学拆除计划暂缓，校区已被封锁。</p><br/>
+                    <p>教育部门启动对该校当年欺凌预防机制的内部复查。</p><br/>
+                    <p>原班主任李老师（已退休）被认定存在"失察之责"，未进一步处分。</p>
+                    <br/>
+                    <h3>（二）直播平台</h3><br/>
+                    <p>平台被网信办约谈、罚款，责令整改。</p><br/>
+                    <p>要求加强直播内容实时审核与高风险直播报备机制。</p>
+                </div>
+                
+                <!-- 第七部分：社会舆论与讨论 -->
+                <div id="section7" class="news-section">
+                    <h2 class="section-title">七、社会舆论与公共讨论</h2>
+					<br/>
+                    <p><strong>校园欺凌议题再升温：</strong>事件引发对"冷暴力"长期危害的广泛关注，多地加强反欺凌教育。</p>
+					<br/>
+                    <p><strong>法律与道德的边界：</strong>沈某言的"私力复仇"行为引发关于"正义实现方式"的激烈辩论。</p>
+					<br/>
+                    <p><strong>网络直播伦理：</strong>直播内容尺度、隐私侵犯与平台责任成为监管重点。</p>
+                </div>
+            </div>
+            
+            <!-- 第八项结语（不在选项卡内） -->
+            <div class="conclusion-section">
+                <h2 class="conclusion-title">结语</h2>
+                <p>此事件是一起由个人心理创伤驱动、利用网络直播实施的违法案件，同时也暴露出过往校园欺凌事件中未能彻底化解的社会矛盾。相关部门将继续依法处理案件，并推动校园欺凌预防与干预机制的完善。</p>
+                
+                <p>我们呼吁公众理性看待此事，不传播未经证实的信息，不进行网络暴力，共同维护清朗网络空间与社会公平正义。</p>
+                
+                <div class="important-note">
+                    <p><strong>最后更新：2026年3月15日</strong></p>
+                    <p><strong>信息来源：</strong>XX市公安局、教育局、互联网信息办公室、公开媒体报道</p>
+                    <p><strong>声明：</strong>本通报内容基于已核实信息，案件仍在司法程序中，后续进展将依法适时公布。</p>
+                    <p>（本页面将持续更新事件后续进展）</p>
+                    <p>如有相关线索，请依法向公安机关反映。</p>
+                    <p>举报电话：110 | 网络举报平台：www.cyberpolice.cn</p>
+                </div>
+            </div>
+            
+            <!-- 查看黑屏结语按钮区域 -->
+            <div class="next-page-link">
+                <a id="show-ending-btn">查看结语</a>
+            </div>
+            
+            <!-- 页脚 -->
+            <div class="news-footer">
+                © 2026 XX市联合调查组 版权所有 | 联系电话：0XXX-XXXXXXX | 本通报将根据调查进展持续更新
+            </div>
+        </div>
+    </div>
+    
+    <!-- 黑屏白字虚构声明区域 -->
+    <div class="black-screen" id="ending-screen">
+        <h2>注意事项</h2>
+        <p>本故事纯属虚构，旨在探讨校园冷暴力之危害。</p>
+        <p>愿每一个"苏筱芷"都能被看见、被善待。</p>
+        <p>愿施暴者与旁观者，终能直面内心，真正忏悔。</p>
+        <p>愿悲剧，永不重演。</p>
+        <p>感谢您的耐心体验和观看。</p>
+        <p style="font-size: 28px; margin-top: 50px; color: #4ecdc4;">完。</p>
+        <div class="back-link">
+            <a href="index.html">返回游戏</a>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // 初始化图片滚动动画
+            initImageScroll();
+            
+            // 选项卡点击事件（只有1-7项）
+            $('.news-tab').click(function() {
+                // 移除所有选项卡的active类
+                $('.news-tab').removeClass('active');
+                // 给当前点击的选项卡添加active类
+                $(this).addClass('active');
+                
+                // 获取选项卡的ID，提取数字部分
+                const tabId = $(this).attr('id');
+                const tabNumber = tabId.replace('tab', '');
+                
+                // 隐藏所有内容区域
+                $('.news-section').removeClass('active');
+                // 显示对应的内容区域
+                $(`#section${tabNumber}`).addClass('active');
+            });
+            
+            // "查看结语"按钮点击事件 - 显示黑屏白字虚构声明
+            $('#show-ending-btn').click(function() {
+                $('#ending-screen').addClass('active');
+                $('body').css('overflow', 'hidden');
+            });
+        });
+        
+        // 图片滚动动画功能
+        function initImageScroll() {
+            console.log("初始化图片滚动动画");
+            
+            // 获取图片列表元素
+            const $list = $('#list');
+            
+            // 设置初始位置
+            $list.css('left', '0px');
+            
+            // 开始动画循环
+            moveAgain();
+        }
+        
+        function moveAgain() {
+            $('#list').animate({
+                left: '-3300px'  
+            }, 10000, function() {
+                $(this).animate({
+					'left':'0px'
+					},10000,function(){
+						 moveAgain();
+					});
+            });
+        }
+    </script>
+</body>
+</html>

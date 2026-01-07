@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纸怨</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .map-container {
+            width: 100%;
+            height: 100vh;
+            padding: 0; /* 去掉内边距让图片全屏 */
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-title {
+            text-align: center;
+            padding: 15px;
+            color: #ff6b6b;
+            background-color: rgba(0, 0, 0, 0.7);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+        }
+
+        .map-title h1 {
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+
+        .map-title p {
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .school-map {
+            width: 100%;
+            height: 100vh; /* 全屏高度 */
+            background-image: url('res/废弃中学图.png');
+            background-size: cover; /* 让图片覆盖整个屏幕 */
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        .location {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background-color: #8b0000;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 1.2;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+            text-decoration: none;
+            border: 2px solid #ff6b6b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        .location:hover {
+            background-color: #a00;
+            transform: scale(1.15);
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
+        }
+
+        .locked {
+            background-color: #555 !important;
+            cursor: not-allowed;
+            border-color: #777;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .locked:hover {
+            transform: none;
+            background-color: #555 !important;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* 根据地图片内容调整这些位置 */
+        #gate {
+            top: 81%;
+            left: 55%;
+        }
+
+        #corridor {
+            top:40%;
+            left: 38%;
+        }
+
+
+        #classroom {
+            top: 41%;
+            left: 19%;
+        }
+
+        #office {
+            top: 38%;
+            left: 55%;
+        }
+
+        #toilet {
+            top: 40%;
+            left: 8%;
+        }
+
+        #rooftop {
+            top: 26%;
+            left: 43%;
+        }
+
+        .tip-text {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="map-container">
+        <div class="map-title">
+            <h1>纸怨<h1>
+            <p>探索地点</p>
+        </div>
+        
+        <div class="school-map">
+            <!-- 根据你的地图片，调整这些位置 -->
+            <a href="gate.html" class="location" id="gate">校门</a>
+            <a href="scene_corridor.html" class="location" id="corridor">走廊</a>
+            <a href="classroom.html" class="location" id="classroom">教室</a>
+            <a href="scene_office.html" class="location" id="office">办公室</a>
+            <a href="scene_toilet.html" class="location" id="toilet">厕所</a>
+            <a href="roof.html" class="location" id="rooftop">天台</a>
+        </div>
+
+        <div class="tip-text">
+            完成当前地点的剧情以解锁新区域。
+        </div>
+    </div>
+</body>
+</html>

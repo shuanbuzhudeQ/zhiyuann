@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纸怨——走廊</title>
+    <link rel="stylesheet" href="css/main.css">
+    
+    <style>
+        /* ==================== 场景特有样式 ==================== */
+        /* 物品放大展示层 */
+        .item-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .item-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .item-overlay-content {
+            position: relative;
+            max-width: 80%;
+            max-height: 80%;
+        }
+        
+        .item-overlay-content img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+        
+        .close-item {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .close-item img {
+            width: 24px;
+            height: 24px;
+            box-shadow: none;
+        }
+        
+        /* 红圈样式 */
+        .circle-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        /* ==================== 对话框修复样式 ==================== */
+        /* 场景容器样式调整 */
+        .scene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 人物立绘容器 - 调整高度占屏幕更多 */
+        .character-avatar-container {
+            position: absolute;
+            bottom: 0; /* 改为0，让容器底部贴着屏幕底边 */
+            width: 100%;
+            height: 70%; /* 增加立绘容器高度到70% */
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        /* 人物立绘 - 增大尺寸 */
+        .character-avatar-img {
+            position: absolute;
+            bottom: 0; /* 改为0，让立绘底部贴着容器底部 */
+            max-height: 100%; /* 改为100%，让立绘可以占满容器高度 */
+            max-width: 60%; /* 增加最大宽度到60% */
+            width: auto; /* 添加这个 */
+            height: auto; /* 添加这个 */
+            object-fit: contain;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+        }
+        
+        /* 人物立绘在左侧 */
+        .character-left {
+            left: 5%;
+        }
+        
+        /* 人物立绘在右侧 */
+        .character-right {
+            right: 5%;
+        }
+        
+        /* 对话框容器 - 调整高度 */
+        .dialogue-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%; /* 减小对话框容器高度到30%，给立绘更多空间 */
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            pointer-events: none;
+        }
+        
+        /* 对话框 */
+        .dialogue-box {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #4ecdc4;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0 20px 20px 20px;
+            min-height: 120px;
+            max-height: 180px; /* 限制最大高度 */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            overflow-y: auto; /* 添加滚动条 */
+            overflow-x: hidden;
+        }
+        
+        /* 对话框滚动条样式 */
+        .dialogue-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .dialogue-box::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .dialogue-box::-webkit-scrollbar-thumb {
+            background: #4ecdc4;
+            border-radius: 4px;
+        }
+        
+        .dialogue-box::-webkit-scrollbar-thumb:hover {
+            background: #3abbb2;
+        }
+        
+        /* 对话框标题 */
+        .dialogue-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .title-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        /* 对话框文本 */
+        .dialogue-text {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        
+        /* 对话框提示 */
+        .dialogue-hint {
+            text-align: right;
+            font-size: 14px;
+            color: #ffcc00;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        
+        /* 旁白框样式 */
+        .narration-box {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #4ecdc4;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0 20px 20px 20px;
+            min-height: 120px;
+            max-height: 180px; /* 限制最大高度 */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            overflow-y: auto; /* 添加滚动条 */
+            overflow-x: hidden;
+        }
+        
+        /* 旁白框滚动条样式 */
+        .narration-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .narration-box::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .narration-box::-webkit-scrollbar-thumb {
+            background: #4ecdc4;
+            border-radius: 4px;
+        }
+        
+        .narration-box::-webkit-scrollbar-thumb:hover {
+            background: #3abbb2;
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* ==================== 动画关键帧 ==================== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* 立绘淡入动画 */
+        @keyframes avatarFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 对话框淡入动画 */
+        @keyframes dialogueFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 特殊提示样式 */
+        .special-hint {
+            background-color: rgba(255, 204, 0, 0.1);
+            border: 1px solid #ffcc00;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            text-align: center;
+            color: #ffcc00;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <a href="map.html" class="map-link">回到地图</a>
+        
+        <div class="scene-area scene-container">
+            <!-- 场景1：楼梯间 -->
+            <div class="scene" id="scene1">
+                <div class="scene-content">
+                    <!-- 初始背景图片 -->
+                    <img src="res/走廊2.jpg" alt="楼梯间" class="scene-bg active" id="scene1-bg1">
+                    <!-- 调查台阶时的背景图片 -->
+                    <img src="res/走廊3.png" alt="调查台阶" class="scene-bg" id="scene1-bg2" style="display: none;">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="character-avatar-container1"></div>
+                    
+                    <!-- 对话容器 -->
+                    <div class="dialogue-container" id="dialogue-container">
+                        <!-- 初始旁白 -->
+                        <div class="narration-box" id="narration-box">
+                            <div class="dialogue-text" id="narration-content">
+                                走过两遍的楼梯，你已不再害怕。<br><br>
+                                行至一楼半转角，王鹏骤然停步。
+                            </div>
+                            <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 物品栏 -->
+                    <div class="inventory-area" id="inventory-area1">
+                        <div class="inventory-placeholder">物品栏</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 场景2：铁门前 -->
+            <div class="scene" id="scene2">
+                <div class="scene-content">
+                    <img src="res/铁门.png" alt="铁门前" class="scene-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="character-avatar-container2"></div>
+                    
+                    <!-- 场景2对话容器 -->
+                    <div class="dialogue-container" id="scene2-dialogue-container"></div>
+                    
+                    <!-- 物品栏 -->
+                    <div class="inventory-area" id="inventory-area2">
+                        <div class="inventory-placeholder">物品栏</div>
+                    </div>
+                </div>
+                
+                <!-- 红圈容器 -->
+                <div class="circle-container">
+                    <div class="hint-circle" id="circle-door"></div>
+                </div>
+            </div>
+
+            <!-- 场景3：走廊 -->
+            <div class="scene" id="scene3">
+                <div class="scene-content">
+                    <img src="res/走廊.jpg" alt="走廊西侧" class="scene-bg">
+                    
+                    <!-- 人物立绘容器 -->
+                    <div class="character-avatar-container" id="character-avatar-container3"></div>
+                    
+                    <!-- 场景3对话容器 -->
+                    <div class="dialogue-container" id="scene3-dialogue-container"></div>
+                    
+                    <!-- 物品栏 -->
+                    <div class="inventory-area" id="inventory-area3">
+                        <div class="inventory-placeholder">物品栏</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 直播评论区 -->
+        <div class="live-area">
+            <div class="live-header">
+                <h3 class="live-title">直播间评论区</h3>
+                <span class="viewer-count">在线人数: <span id="viewer-count">824678</span></span>
+            </div>
+            
+            <div class="comment-area" id="comment-area">
+            </div>
+            
+            <div class="comment-input">
+                <input type="text" placeholder="发送你的评论..." id="comment-input">
+            </div>
+        </div>
+    </div>
+
+    <!-- 物品放大展示层 -->
+    <div class="item-overlay" id="item-overlay">
+        <div class="item-overlay-content">
+            <img id="overlay-item-img" src="" alt="">
+            <div class="close-item" onclick="closeItemOverlay()">
+                <img src="res/叉叉.png" alt="关闭">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 游戏状态管理 ====================
+        const gameState = {
+            currentScene: 1,
+            currentDialogueIndex: 0,
+            shownDialogueIds: new Set(),
+            inventory: [],
+            characters: {
+                你: { position: 'right', color: '#4ecdc4' },
+                王鹏: { position: 'left', color: '#95e1d3' },
+                孙薇薇: { position: 'left', color: '#f8a5c2' },
+                沈墨言: { position: 'left', color: '#778beb' }
+            },
+            isWaitingForClick: false,
+            clickCallback: null,
+            hasStarted: false,
+            currentDialogueContainer: null,
+            hasGotDiary: false,
+            hasDoorOpened: false,
+            showingItem: false,
+            currentCharacter: null,
+            currentAvatar: null
+        };
+        
+        // ==================== 物品系统 ====================
+        const inventoryItems = {
+            '纸条': {
+                id: 'note',
+                name: '纸条',
+                image: 'res/纸条.png',
+                description: '沈墨言留下的纸条'
+            },
+            '二楼钥匙': {
+                id: 'key_second_floor',
+                name: '二楼钥匙',
+                image: 'res/二楼钥匙.png',
+                description: '一把小巧的黄铜钥匙，标签上写着"二楼"'
+            },
+            '小纸的日记·一': {
+                id: 'diary_one',
+                name: '小纸的日记·一',
+                image: 'res/小纸的日记(其一).png',
+                description: '小纸转学第一天的日记'
+            }
+        };
+        
+        // ==================== DOM元素引用 ====================
+        const elements = {
+            narrationBox: document.getElementById('narration-box'),
+            narrationContent: document.getElementById('narration-content'),
+            commentArea: document.getElementById('comment-area'),
+            viewerCount: document.getElementById('viewer-count'),
+            circleDoor: document.getElementById('circle-door'),
+            itemOverlay: document.getElementById('item-overlay'),
+            overlayItemImg: document.getElementById('overlay-item-img'),
+            scene1Bg1: document.getElementById('scene1-bg1'),
+            scene1Bg2: document.getElementById('scene1-bg2')
+        };
+        
+        // ==================== 初始化物品栏（从天台继承） ====================
+        function initializeInventory() {
+            // 从天台获得的两个初始物品
+            gameState.inventory = [
+                {
+                    ...inventoryItems['二楼钥匙'],
+                    count: 1
+                }
+            ];
+            updateInventoryDisplay();
+        }
+        
+        // ==================== 物品栏函数 ====================
+        function addItemToInventory(itemId) {
+            const item = inventoryItems[itemId];
+            if (!item) return false;
+            
+            const existingItem = gameState.inventory.find(i => i.id === item.id);
+            if (!existingItem) {
+                gameState.inventory.push({
+                    ...item,
+                    count: 1
+                });
+                updateInventoryDisplay();
+                return true;
+            }
+            return false;
+        }
+        
+        function updateInventoryDisplay() {
+            for (let i = 1; i <= 3; i++) {
+                const inventoryArea = document.getElementById(`inventory-area${i}`);
+                if (!inventoryArea) continue;
+                
+                inventoryArea.innerHTML = '';
+                
+                const titleElement = document.createElement('div');
+                titleElement.className = 'inventory-placeholder';
+                titleElement.textContent = '物品栏';
+                inventoryArea.appendChild(titleElement);
+                
+                gameState.inventory.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'inventory-item';
+                    itemDiv.title = item.name + ': ' + item.description;
+                    itemDiv.dataset.itemId = item.id;
+                    
+                    const img = document.createElement('img');
+                    img.src = item.image;
+                    img.alt = item.name;
+                    itemDiv.appendChild(img);
+                    
+                    // 为所有物品添加点击事件
+                    itemDiv.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        
+                        // 场景2：铁门处检查物品
+                        if (gameState.currentScene === 2) {
+                            if (item.id === 'key_second_floor') {
+                                // 使用二楼钥匙 - 显示红圈
+                                handleKeyUsed();
+                            } else if (item.id === 'diary_one') {
+                                // 点击日记 - 显示提示（和纸条一样）
+                                alert("这不是开门的物品");
+                            } else if (item.id === 'note') {
+                                // 点击纸条 - 显示提示
+                                alert("这不是开门的物品");
+                            } else {
+                                alert("这不是开门的物品");
+                            }
+                        } else {
+                            // 其他场景的通用提示
+                            alert("暂时不需要物品哦~");
+                        }
+                    });
+                    
+                    inventoryArea.appendChild(itemDiv);
+                });
+            }
+        }
+        
+        // ==================== 场景2铁门使用钥匙逻辑 ====================
+        function handleKeyUsed() {
+            if (gameState.hasDoorOpened) return;
+            
+            gameState.hasDoorOpened = true;
+            
+            // 如果是使用钥匙才移除钥匙
+            const isUsingKey = gameState.inventory.some(item => item.id === 'key_second_floor');
+            if (isUsingKey) {
+                const keyIndex = gameState.inventory.findIndex(item => item.id === 'key_second_floor');
+                if (keyIndex !== -1) {
+                    gameState.inventory.splice(keyIndex, 1);
+                    updateInventoryDisplay();
+                }
+            }
+            
+            // 更新对话容器
+            const container = gameState.currentDialogueContainer;
+            if (container) {
+                const narrationBox = document.createElement('div');
+                narrationBox.className = 'narration-box';
+                
+                narrationBox.innerHTML = `
+                    <div class="dialogue-text">
+                        钥匙插入锁孔，转动。<br>
+                        铁门应声打开。
+                    </div>
+                    <div class="dialogue-hint">点击红圈进入走廊</div>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(narrationBox);
+                
+                setTimeout(() => {
+                    narrationBox.style.opacity = '1';
+                    narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                    
+                    // 延迟显示红圈
+                    setTimeout(() => {
+                        showScene2Circle();
+                    }, 1000);
+                }, 10);
+            }
+        }
+        
+        // ==================== 红圈系统 ====================
+        function showScene2Circle() {
+            if (!elements.circleDoor) return;
+            
+            const scene2 = document.getElementById('scene2');
+            if (!scene2) return;
+            
+            const sceneContent = scene2.querySelector('.scene-content');
+            if (!sceneContent) return;
+            
+            // 在铁门锁位置显示红圈
+            const sceneRect = sceneContent.getBoundingClientRect();
+            const x = (sceneRect.width * 57/ 100);
+            const y = (sceneRect.height * 68/ 100);
+            
+            elements.circleDoor.style.left = x + 'px';
+            elements.circleDoor.style.top = y + 'px';
+            elements.circleDoor.style.display = 'block';
+            elements.circleDoor.classList.add('active');
+        }
+        
+        // ==================== 物品放大展示 ====================
+        let currentItemToAdd = null;
+
+        function showItemOverlay(imageSrc, itemId) {
+            if (gameState.showingItem) return;
+            gameState.showingItem = true;
+            
+            elements.overlayItemImg.src = imageSrc;
+            currentItemToAdd = itemId;
+            elements.itemOverlay.classList.add('active');
+            
+            // 播放获得物品的音效
+            const audio = new Audio('res/获得物品音频.mp3');
+            audio.volume = 0.7;
+            audio.play().catch(e => {});
+        }
+        
+        // ==================== 关闭物品放大层并自动切换到场景2 ====================
+        function closeItemOverlay() {
+            if (!gameState.showingItem) return;
+            
+            elements.itemOverlay.classList.remove('active');
+            gameState.showingItem = false;
+            
+            if (currentItemToAdd) {
+                // 添加物品到物品栏
+                const added = addItemToInventory(currentItemToAdd);
+                if (added) {
+                    // 获得日记后直接切换到场景2，无需等待用户点击
+                    gameState.hasGotDiary = true;
+                    
+                    // 强制隐藏场景1，显示场景2
+                    document.getElementById('scene1').style.display = 'none';
+                    document.getElementById('scene2').style.display = 'block';
+                    
+                    // 更新游戏状态
+                    gameState.currentScene = 2;
+                    gameState.currentDialogueContainer = document.getElementById('scene2-dialogue-container');
+                    
+                    // 清除立绘
+                    clearAvatar();
+                    
+                    // 显示场景2的初始对话
+                    setTimeout(() => {
+                        showScene2InitialDialogue();
+                    }, 500);
+                }
+                currentItemToAdd = null;
+            }
+        }
+        
+        // ==================== 弹幕内容 ====================
+        const commentsData = {
+            楼梯异常: [
+                { user: '探险爱好者', text: '13阶楼梯！灵异现象开始了！' },
+                { user: '数学达人', text: '一楼到二楼12阶是标准设计' },
+                { user: '恐怖片专家', text: '高能预警！要出现怪谈了！' }
+            ],
+            沈墨言传说: [
+                { user: '特殊网友', text: '沈墨言提到的灵异传说是真的！' },
+                { user: '侦探迷', text: '所以台阶数真的会变？' }
+            ],
+            薇薇害怕: [
+                { user: '网友', text: '孙薇薇又开始装柔弱了' },
+                { user: '网友', text: '指甲都掐进肉里了，演得挺真' }
+            ],
+            王鹏确认: [
+                { user: '网友', text: '王鹏胆子好小啊' },
+                { user: '数学老师', text: '确实是13阶，我跟着数了' }
+            ],
+            晚晴调查: [
+                { user: '网友', text: '晚晴好冷静啊' },
+                { user: '网友', text: '主播开始调查了！' }
+            ],
+            发现异常: [
+                { user: '特殊网友', text: '看到光了！有东西！' },
+                { user: '网友', text: '台阶在发光！' }
+            ],
+            发现机关: [
+                { user: '网友', text: '台阶是空心的！' },
+                { user: '技术宅', text: '嗒嗒声明显不一样' }
+            ],
+            撬开台阶: [
+                { user: '探险爱好者', text: '指甲刀也能当工具！' },
+                { user: '网友', text: '晚晴姐太厉害了！' }
+            ],
+            发现日记: [
+                { user: '特殊网友', text: '是小纸的日记！' },
+                { user: '网友', text: '转学第一天的记录' }
+            ],
+            沈墨言留言: [
+                { user: '特殊网友', text: '沈墨言的笔迹！' },
+                { user: '推理大师', text: '日记肯定被拆成好几份了' }
+            ],
+            到达铁门: [
+                { user: '网友', text: '又到铁门了' },
+                { user: '网友', text: '要用二楼钥匙开门' }
+            ],
+            打开铁门: [
+                { user: '网友', text: '门开了！' },
+                { user: '探险爱好者', text: '进入走廊了！' }
+            ],
+            走廊环境: [
+                { user: '观察员', text: '走廊好破旧啊' },
+                { user: '恐怖片专家', text: '霉味隔着屏幕都闻到了' }
+            ],
+            前往教室: [
+                { user: '网友', text: '要去教室了！' },
+                { user: '老同学', text: '高三九班，记忆中的教室' }
+            ]
+        };
+        
+        // ==================== 改进的弹幕系统 ====================
+        const shownCommentGroups = new Set();
+        
+        function addCommentsOnce(comments, interval = 500) {
+            const commentKey = comments[0]?.text;
+            if (shownCommentGroups.has(commentKey)) {
+                return;
+            }
+            shownCommentGroups.add(commentKey);
+            
+            let index = 0;
+            
+            const existingComments = Array.from(elements.commentArea.children).map(child => {
+                const textDiv = child.querySelector('div:nth-child(2)');
+                return textDiv ? textDiv.textContent : '';
+            });
+            
+            function addNextComment() {
+                if (index >= comments.length) return;
+                
+                const comment = comments[index];
+                
+                if (!existingComments.includes(comment.text)) {
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'comment pop-in';
+                    commentDiv.innerHTML = `
+                        <div class="comment-user">${comment.user}</div>
+                        <div>${comment.text}</div>
+                    `;
+                    elements.commentArea.appendChild(commentDiv);
+                    
+                    setTimeout(() => {
+                        commentDiv.style.animation = 'popIn 0.5s ease forwards';
+                    }, 10);
+                    
+                    scrollCommentsToBottom();
+                    
+                    const currentCount = parseInt(elements.viewerCount.textContent);
+                    const increment = Math.floor(Math.random() * 10) + 5;
+                    elements.viewerCount.textContent = currentCount + increment;
+                }
+                
+                index++;
+                
+                if (index < comments.length) {
+                    setTimeout(addNextComment, interval);
+                }
+            }
+            
+            addNextComment();
+        }
+        
+        function scrollCommentsToBottom() {
+            if (elements.commentArea) {
+                elements.commentArea.scrollTop = elements.commentArea.scrollHeight;
+            }
+        }
+        
+        // ==================== 场景对话序列 ====================
+        const sceneDialogues = {
+            scene1: [
+                {
+                    type: 'character',
+                    character: '王鹏',
+                    text: '“……等等。”他声音发颤。',
+                    avatar: 'res/王鹏.png',
+                    action: '王鹏蹲身，手电照向脚下台阶，面色惨白，嘴唇哆嗦',
+                    commentKey: '楼梯异常'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '"怎么了？"你不耐回头。',
+                    avatar: 'res/林晚晴.png'
+                },
+                {
+                    type: 'character',
+                    character: '王鹏',
+                    text: '"我们……刚从这里上来的，对吧？"',
+                    avatar: 'res/王鹏.png'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '"那还用说。"',
+                    avatar: 'res/孙薇薇.png'
+                },
+                {
+                    type: 'character',
+                    character: '王鹏',
+                    text: '"那为什么……"王鹏抬头，满眼惊恐："一楼到二楼该是12阶，我刚数，是13阶？"',
+                    avatar: 'res/王鹏.png'
+                },
+                {
+                    type: 'narration',
+                    content: '空气瞬间凝滞。寒意窜上脊背，你猛地想起沈墨言提过的灵异传说。'
+                },
+                {
+                    type: 'character',
+                    character: '沈墨言',
+                    text: '"教学楼二楼楼梯，夜间接正着数12阶，倒着数却是13阶……"',
+                    avatar: 'res/沈墨言.png',
+                    commentKey: '沈墨言传说'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '孙薇薇攥紧你胳膊，指甲几乎嵌进肉里。"怎、怎么可能？"她强扯笑容："这时候谁会数台阶啊……"',
+                    avatar: 'res/孙薇薇.png',
+                    commentKey: '薇薇害怕'
+                },
+                {
+                    type: 'character',
+                    character: '王鹏',
+                    text: '"我没数错。"王鹏执拗转身，上下走了几步，低声数着："1、2、3……11、12、13。"他立在二楼平台回头，唇齿打颤："……真是13阶。"',
+                    avatar: 'res/王鹏.png',
+                    commentKey: '王鹏确认'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '你不信邪，亲自下楼数，13阶；再上楼，12阶。脸色骤沉，怎么会这样！你深吸一口气定神，定是沈墨言设的机关，决意细查。',
+                    avatar: 'res/林晚晴.png',
+                    commentKey: '晚晴调查'
+                },
+                {
+                    type: 'narration',
+                    content: '你蹲身凑近，手电斜照，台阶边缘光影清晰。',
+                    changeBackground: true
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '"王同学，再走一次，慢些。"你沉声吩咐。',
+                    avatar: 'res/林晚晴.png'
+                },
+                {
+                    type: 'narration',
+                    content: '你走回那阶台阶旁边，蹲下来，用手摸了摸表面——是硬的，和别的台阶没什么两样。但当你用手指关节轻轻叩了叩——',
+                    commentKey: '发现异常'
+                },
+                {
+                    type: 'narration',
+                    content: '王鹏依言后退半步，重新踩下。<br>这次你看得真切，他落脚时，台阶表层有薄物微陷，一瞬反出幽幽惨白的光。'
+                },
+                {
+                    type: 'narration',
+                    content: '你起身抬眼，望向楼梯拐角天花板，老旧吸顶灯罩破了大半，灯座里，竟隐隐透着紫蓝色冷光，像鬼火般瘆人，绝非灯泡的黄光。'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '你心头一沉："……灯里藏了东西。"',
+                    avatar: 'res/林晚晴.png'
+                },
+                {
+                    type: 'narration',
+                    content: '折返那阶旁蹲身，手摸表面，硬实如常。指节轻叩——"嗒、嗒。"<br>声响空脆，与其他台阶沉闷的"咚、咚"截然不同。指甲顺边缘轻抠，竟掀开一角——这根本不是水泥，是层仿水泥纹理的薄塑料贴皮！',
+                    commentKey: '发现机关'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '"这台阶被动了手脚！"你抬头道："有没有能撬的东西？"',
+                    avatar: 'res/林晚晴.png'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '孙薇薇从包里翻出指甲刀递来："打开这个试试。"',
+                    avatar: 'res/孙薇薇.png'
+                },
+                {
+                    type: 'narration',
+                    content: '你接过，将指甲刀长端插进缝隙，用力一别——"咔啦。"',
+                    commentKey: '撬开台阶'
+                },
+                {
+                    type: 'narration',
+                    content: '整片塑料贴皮被撬起，下方竟被掏空一小块，里头粘着巴掌大的电路板，板上排满紫光小灯珠，铺着亮粉，旁侧连两颗电池，还有火柴盒大的黑盒子。黑盒子上，透明胶带粘着张叠得方正的纸。'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '孙薇薇惊呼："晚晴姐！你太厉害了！"',
+                    avatar: 'res/孙薇薇.png'
+                },
+                {
+                    type: 'narration',
+                    content: '二人围上前来，紧盯你手中线索。'
+                },
+                {
+                    type: 'narration',
+                    content: '你小心撕下纸张展开。<br>是泛黄毛边的B5笔记本纸，蓝色圆珠字迹娟秀工整：'
+                },
+                {
+                    type: 'narration',
+                    content: '<div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 5px; border-left: 3px solid #4ecdc4;">' +
+                            '<strong>20XX年9月1日，晴</strong><br>' +
+                            '今天转学第一天。<br>' +
+                            '啊啊啊好紧张，高三转学好少见，还好没人追问，大家都好温柔，要好好努力！<br>' +
+                            '带的小饼干都送出去了，谢谢大家，我超勇敢的！<br>' +
+                            '班长人超好，帮我搬书，话少又温柔，校园男神照进现实，麻麻我要恋爱了（不是）<br>' +
+                            '高三牲禁止早恋！禁止早恋！禁止早恋！<br>' +
+                            '班主任居然是中年大叔，帅班主任梦碎，哭辽~<br>' +
+                            '超喜欢这里，希望快点融入大家！<br><br>' +
+                            '<small>纸的右下角，画着只歪扭的纸飞机，和假人旁纸条上的模样相似。</small>' +
+                            '</div>',
+                    commentKey: '发现日记'
+                },
+                {
+                    type: 'narration',
+                    content: '翻面看去，墨迹崭新，字迹眼熟，正是沈墨言邮件里的笔迹，是他所写：'
+                },
+                {
+                    type: 'narration',
+                    content: '<div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px; border-left: 3px solid #778beb;">' +
+                            '<strong>恭喜你们，用眼睛看见了"异常"。</strong><br>' +
+                            '<strong>这是小纸的日记。</strong><br><br>' +
+                            '<small>字里行间的天真鲜活，让你莫名心生抵触。</small>' +
+                            '</div>',
+                    commentKey: '沈墨言留言'
+                },
+                {
+                    type: 'character',
+                    character: '孙薇薇',
+                    text: '孙薇薇蹙眉："这是最终谜题的线索？就一份日记？"',
+                    avatar: 'res/孙薇薇.png'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '你摇摇头，站起身，将日记纸小心折好，收进小包里："恐怕不止，他说不定把这位小纸的日记拆成了很多份，全部藏在了机关里。"',
+                    avatar: 'res/林晚晴.png'
+                }
+            ]
+        };
+        
+        // ==================== 核心函数 ====================
+        function waitForClick(callback) {
+            if (gameState.isWaitingForClick) return;
+            
+            gameState.isWaitingForClick = true;
+            gameState.clickCallback = callback;
+        }
+        
+        function handleSceneClick(event) {
+            // 检查是否点击了特殊元素
+            if (event.target.classList.contains('item-get-button') ||
+                event.target.classList.contains('map-link') || 
+                event.target.closest('.map-link') ||
+                event.target.classList.contains('scene-link') || 
+                event.target.closest('.scene-link') ||
+                event.target.classList.contains('hint-circle') || 
+                event.target.closest('.hint-circle')) {
+                return;
+            }
+            
+            // 检查是否点击了物品栏
+            for (let i = 1; i <= 3; i++) {
+                const inventoryArea = document.getElementById(`inventory-area${i}`);
+                if (inventoryArea && inventoryArea.contains(event.target)) {
+                    return;
+                }
+            }
+            
+            // 检查是否点击了物品放大层
+            if (elements.itemOverlay.classList.contains('active')) {
+                return;
+            }
+            
+            // 执行点击回调
+            if (gameState.isWaitingForClick && gameState.clickCallback) {
+                const callback = gameState.clickCallback;
+                gameState.isWaitingForClick = false;
+                gameState.clickCallback = null;
+                callback();
+            }
+        }
+        
+        // ==================== 切换背景图片函数 ====================
+        function changeSceneBackground() {
+            if (!elements.scene1Bg1 || !elements.scene1Bg2) return;
+            
+            // 淡出当前背景
+            elements.scene1Bg1.style.transition = 'opacity 0.8s ease';
+            elements.scene1Bg1.style.opacity = '0';
+            
+            // 淡入新背景
+            setTimeout(() => {
+                elements.scene1Bg1.style.display = 'none';
+                elements.scene1Bg2.style.display = 'block';
+                elements.scene1Bg2.style.opacity = '0';
+                elements.scene1Bg2.style.transition = 'opacity 0.8s ease';
+                
+                setTimeout(() => {
+                    elements.scene1Bg2.style.opacity = '1';
+                }, 50);
+            }, 100);
+        }
+        
+        // ==================== 清除人物立绘 ====================
+        function clearAvatar() {
+            const avatarContainers = [
+                document.getElementById('character-avatar-container1'),
+                document.getElementById('character-avatar-container2'),
+                document.getElementById('character-avatar-container3')
+            ];
+            
+            avatarContainers.forEach(container => {
+                if (container) {
+                    container.innerHTML = '';
+                }
+            });
+            
+            gameState.currentCharacter = null;
+            gameState.currentAvatar = null;
+        }
+        
+        // ==================== 显示人物立绘 ====================
+        function showAvatar(character, avatar) {
+            if (!character || !avatar) return;
+            
+            const charConfig = gameState.characters[character];
+            if (!charConfig) return;
+            
+            clearAvatar();
+            
+            const avatarContainer = document.getElementById(`character-avatar-container${gameState.currentScene}`);
+            if (!avatarContainer) return;
+            
+            const avatarImg = document.createElement('img');
+            avatarImg.className = `character-avatar-img ${charConfig.position === 'right' ? 'character-right' : 'character-left'}`;
+            avatarImg.src = avatar;
+            avatarImg.alt = character;
+            avatarImg.style.opacity = '0';
+            avatarImg.style.animation = 'avatarFadeIn 0.7s ease forwards';
+            
+            avatarContainer.appendChild(avatarImg);
+            
+            // 设置淡入动画
+            setTimeout(() => {
+                avatarImg.style.opacity = '1';
+            }, 10);
+            
+            gameState.currentCharacter = character;
+            gameState.currentAvatar = avatar;
+        }
+        
+        // ==================== 场景切换函数 ====================
+        function switchToScene(sceneNum) {
+            console.log('切换场景到:', sceneNum);
+            gameState.currentScene = sceneNum;
+            gameState.currentDialogueIndex = 0;
+            gameState.shownDialogueIds.clear();
+            
+            // 隐藏所有场景
+            const scenes = document.querySelectorAll('.scene');
+            scenes.forEach(scene => {
+                scene.style.display = 'none';
+            });
+            
+            // 显示目标场景
+            const targetScene = document.getElementById(`scene${sceneNum}`);
+            if (targetScene) {
+                targetScene.style.display = 'block';
+            }
+            
+            // 清除立绘
+            clearAvatar();
+            
+            // 根据场景设置对话容器
+            switch(sceneNum) {
+                case 1:
+                    gameState.currentDialogueContainer = document.getElementById('dialogue-container');
+                    break;
+                case 2:
+                    gameState.currentDialogueContainer = document.getElementById('scene2-dialogue-container');
+                    // 确保红圈正确显示
+                    if (gameState.hasDoorOpened) {
+                        setTimeout(() => {
+                            showScene2Circle();
+                        }, 500);
+                    }
+                    break;
+                case 3:
+                    gameState.currentDialogueContainer = document.getElementById('scene3-dialogue-container');
+                    break;
+            }
+            
+            // 开始对话
+            playCurrentSceneDialogue();
+        }
+        
+        // ==================== 核心对话播放系统 ====================
+        function playCurrentSceneDialogue() {
+            if (!gameState.currentDialogueContainer) return;
+            
+            const sceneKey = `scene${gameState.currentScene}`;
+            
+            if (sceneKey === 'scene1') {
+                playScene1Dialogue();
+            } else if (sceneKey === 'scene2') {
+                showScene2InitialDialogue();
+            } else if (sceneKey === 'scene3') {
+                showScene3FinalDialogue();
+            }
+        }
+        
+        function playScene1Dialogue() {
+            const container = gameState.currentDialogueContainer;
+            if (!container) return;
+            
+            const dialogues = sceneDialogues.scene1;
+            
+            // 如果已经播放完所有对话，显示日记获得旁白
+            if (gameState.currentDialogueIndex >= dialogues.length) {
+                showDiaryAcquisitionDialogue();
+                return;
+            }
+            
+            const dialogue = dialogues[gameState.currentDialogueIndex];
+            
+            // 触发弹幕
+            if (dialogue.commentKey && commentsData[dialogue.commentKey]) {
+                addCommentsOnce(commentsData[dialogue.commentKey], 500);
+            }
+            
+            // 切换背景图片（如果有指定）
+            if (dialogue.changeBackground) {
+                changeSceneBackground();
+            }
+            
+            // 播放对话
+            if (dialogue.type === 'narration') {
+                showNarrationDialogue(dialogue.content, container);
+            } else if (dialogue.type === 'character') {
+                showCharacterDialogue(dialogue, container);
+            }
+        }
+        
+        function showNarrationDialogue(content, container) {
+            const narrationBox = document.createElement('div');
+            narrationBox.className = 'narration-box';
+            
+            narrationBox.innerHTML = `
+                <div class="dialogue-text">${content}</div>
+                <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(narrationBox);
+            
+            setTimeout(() => {
+                narrationBox.style.opacity = '1';
+                narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                
+                waitForClick(() => {
+                    gameState.currentDialogueIndex++;
+                    playScene1Dialogue();
+                });
+            }, 10);
+        }
+        
+        function showCharacterDialogue(dialogue, container) {
+            // 显示人物立绘
+            showAvatar(dialogue.character, dialogue.avatar);
+            
+            const charConfig = gameState.characters[dialogue.character];
+            const dialogueBox = document.createElement('div');
+            dialogueBox.className = 'dialogue-box';
+            dialogueBox.style.animation = 'dialogueFadeIn 0.5s ease';
+            
+            let textContent = dialogue.text;
+            if (dialogue.innerThought) {
+                textContent += `<br><br><em style="color: #aaa;">${dialogue.innerThought}</em>`;
+            }
+            if (dialogue.action) {
+                textContent += `<br><br><span style="color: #ffcc00;">${dialogue.action}</span>`;
+            }
+            
+            let hintHTML = '<div class="dialogue-hint">提示：点击屏幕任意位置继续</div>';
+            
+            dialogueBox.innerHTML = `
+                <div class="dialogue-title">
+                    <span class="title-icon" style="background-color:${charConfig.color}"></span>
+                    ${dialogue.character}
+                </div>
+                <div class="dialogue-text">${textContent}</div>
+                ${hintHTML}
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(dialogueBox);
+            
+            setTimeout(() => {
+                dialogueBox.style.opacity = '1';
+                
+                waitForClick(() => {
+                    gameState.currentDialogueIndex++;
+                    playScene1Dialogue();
+                });
+            }, 10);
+        }
+        
+        // ==================== 显示日记获得效果 ====================
+        function showDiaryAcquisitionDialogue() {
+            const container = gameState.currentDialogueContainer;
+            if (!container) return;
+            
+            const narrationBox = document.createElement('div');
+            narrationBox.className = 'narration-box';
+            
+            narrationBox.innerHTML = `
+                <div class="dialogue-text">
+                    你重新走上二楼，没再数台阶。心底隐隐浮现预感，当年，曾有人站在这道多出来的台阶上望着众人，却无人看见她。
+                    <br><br>
+                    你与孙薇薇走在前头，无人察觉，身后王鹏满脸惊魂未定。
+                </div>
+                <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(narrationBox);
+            
+            setTimeout(() => {
+                narrationBox.style.opacity = '1';
+                narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                
+                // 这里等待用户点击
+                waitForClick(() => {
+                    // 显示日记物品的放大图片
+                    showItemOverlay('res/小纸的日记(其一).png', '小纸的日记·一');
+                });
+            }, 10);
+        }
+        
+        // ==================== 场景2初始对话 ====================
+        function showScene2InitialDialogue() {
+            const container = document.getElementById('scene2-dialogue-container');
+            if (!container) return;
+            
+            const narrationBox = document.createElement('div');
+            narrationBox.className = 'narration-box';
+            
+            narrationBox.innerHTML = `
+                <div class="dialogue-text">
+                    行至铁门前。<br><br>
+                    【提示：打开物品栏，选中开锁物品】
+                </div>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(narrationBox);
+            
+            setTimeout(() => {
+                narrationBox.style.opacity = '1';
+                narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                // 显示弹幕
+                addCommentsOnce(commentsData.到达铁门, 500);
+            }, 10);
+        }
+        
+        // ==================== 红圈点击处理 ====================
+        function handleScene2CircleClick() {
+            // 播放开铁门声音
+            new Audio('res/开铁门声.mp3').play();
+            // 切换到场景3并播放最终对话
+            const container = document.getElementById('scene2-dialogue-container');
+            if (container) {
+                const narrationBox = document.createElement('div');
+                narrationBox.className = 'narration-box';
+                
+                narrationBox.innerHTML = `
+                    <div class="dialogue-text">
+                        推开铁门，你们走进了走廊。
+                    </div>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(narrationBox);
+                
+                setTimeout(() => {
+                    narrationBox.style.opacity = '1';
+                    narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                    
+                    // 切换场景到走廊
+                    setTimeout(() => {
+                        window.location.hash = '#scene3';
+                        switchToScene(3);
+                    }, 500);
+                }, 10);
+            }
+        }
+        
+        // ==================== 场景3最终对话 ====================
+        function showScene3FinalDialogue() {
+            const container = document.getElementById('scene3-dialogue-container');
+            if (!container) return;
+            
+            const scene3Dialogues = [
+                {
+                    type: 'narration',
+                    content: '铁门应声打开。',
+                    commentKey: '打开铁门'
+                },
+                {
+                    type: 'narration',
+                    content: '走廊里弥漫霉味，左侧墙根白灰大片剥落，露出发乌水泥，窗玻璃只剩残棱，风灌进来，碎碴在锈窗棂上轻响。廊顶吊灯只亮着星点昏光，映得天花板裂纹如蛛网。',
+                    commentKey: '走廊环境'
+                },
+                {
+                    type: 'narration',
+                    content: '走廊东侧尽头漆黑，是通往办公室的路，你暂不前往。<br><br>西侧远处，是你从前的班级——高三九班。'
+                },
+                {
+                    type: 'character',
+                    character: '你',
+                    text: '你回头道："先去教室，看样子只有我们老班级能进。"',
+                    avatar: 'res/林晚晴.png',
+                    commentKey: '前往教室'
+                },
+                {
+                    type: 'narration',
+                    content: '<div class="special-hint">提示：点击上方"回到地图"，开启教室剧情</div>'
+                }
+            ];
+            
+            let dialogueIndex = 0;
+            
+            function playNextDialogue() {
+                if (dialogueIndex >= scene3Dialogues.length) return;
+                
+                const dialogue = scene3Dialogues[dialogueIndex];
+                
+                if (dialogue.type === 'narration') {
+                    const narrationBox = document.createElement('div');
+                    narrationBox.className = 'narration-box';
+                    
+                    narrationBox.innerHTML = `
+                        <div class="dialogue-text">${dialogue.content}</div>
+                        <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+                    `;
+                    
+                    container.innerHTML = '';
+                    container.appendChild(narrationBox);
+                    
+                    setTimeout(() => {
+                        narrationBox.style.opacity = '1';
+                        narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                        
+                        // 触发弹幕
+                        if (dialogue.commentKey && commentsData[dialogue.commentKey]) {
+                            addCommentsOnce(commentsData[dialogue.commentKey], 500);
+                        }
+                        
+                        waitForClick(() => {
+                            dialogueIndex++;
+                            playNextDialogue();
+                        });
+                    }, 10);
+                } else if (dialogue.type === 'character') {
+                    // 显示人物立绘
+                    showAvatar(dialogue.character, dialogue.avatar);
+                    
+                    const charConfig = gameState.characters[dialogue.character];
+                    const dialogueBox = document.createElement('div');
+                    dialogueBox.className = 'dialogue-box';
+                    dialogueBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                    
+                    dialogueBox.innerHTML = `
+                        <div class="dialogue-title">
+                            <span class="title-icon" style="background-color:${charConfig.color}"></span>
+                            ${dialogue.character}
+                        </div>
+                        <div class="dialogue-text">${dialogue.text}</div>
+                        <div class="dialogue-hint">提示：点击屏幕任意位置继续</div>
+                    `;
+                    
+                    container.innerHTML = '';
+                    container.appendChild(dialogueBox);
+                    
+                    setTimeout(() => {
+                        dialogueBox.style.opacity = '1';
+                        
+                        // 触发弹幕
+                        if (dialogue.commentKey && commentsData[dialogue.commentKey]) {
+                            addCommentsOnce(commentsData[dialogue.commentKey], 500);
+                        }
+                        
+                        waitForClick(() => {
+                            dialogueIndex++;
+                            playNextDialogue();
+                        });
+                    }, 10);
+                }
+            }
+            
+            playNextDialogue();
+        }
+        
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化物品栏（从天台继承）
+            initializeInventory();
+            
+            // 为红圈添加点击事件
+            if (elements.circleDoor) {
+                elements.circleDoor.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    handleScene2CircleClick();
+                });
+            }
+            
+            // 显示初始弹幕
+            setTimeout(() => {
+                addCommentsOnce(commentsData.楼梯异常, 500);
+            }, 1000);
+            
+            // 设置全局点击监听
+            document.addEventListener('click', function(e) {
+                handleSceneClick(e);
+            });
+            
+            // 监听hash变化
+            window.addEventListener('hashchange', function() {
+                const sceneNum = parseInt(window.location.hash.replace('#scene', ''));
+                if (!isNaN(sceneNum)) {
+                    switchToScene(sceneNum);
+                }
+            });
+            
+            // 初始化当前场景
+            function initializeCurrentScene() {
+                const hash = window.location.hash;
+                if (hash) {
+                    const sceneMatch = hash.match(/#scene(\d+)/);
+                    if (sceneMatch) {
+                        const sceneNum = parseInt(sceneMatch[1]);
+                        setTimeout(() => {
+                            switchToScene(sceneNum);
+                        }, 100);
+                    } else {
+                        initializeScene1();
+                    }
+                } else {
+                    initializeScene1();
+                }
+            }
+            
+            // 初始加载
+            initializeCurrentScene();
+            scrollCommentsToBottom();
+        });
+        
+        // 初始化场景1函数
+        function initializeScene1() {
+            gameState.hasStarted = true;
+            gameState.currentScene = 1;
+            gameState.currentDialogueIndex = 0;
+            gameState.currentDialogueContainer = document.getElementById('dialogue-container');
+            
+            // 确保场景1显示
+            const scene1 = document.getElementById('scene1');
+            if (scene1) scene1.style.display = 'block';
+            
+            // 确保场景2和3隐藏
+            const scene2 = document.getElementById('scene2');
+            if (scene2) scene2.style.display = 'none';
+            const scene3 = document.getElementById('scene3');
+            if (scene3) scene3.style.display = 'none';
+            
+            // 等待点击开始对话
+            waitForClick(() => {
+                gameState.currentDialogueIndex = 0;
+                playCurrentSceneDialogue();
+            });
+            
+            setTimeout(() => {
+                if (elements.narrationBox) {
+                    elements.narrationBox.style.opacity = '1';
+                    elements.narrationBox.style.animation = 'dialogueFadeIn 0.5s ease';
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>
