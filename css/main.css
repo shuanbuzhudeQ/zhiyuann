@@ -1,0 +1,519 @@
+/* main.css - 通用样式表 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "微软雅黑", sans-serif;
+    background-color: #1a1a1a;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+}
+
+.game-container {
+    display: flex;
+    height: 100%;
+    position: relative;
+}
+
+/* ==================== 左侧场景区 ==================== */
+.scene-area {
+    flex: 4;
+    position: relative;
+    background-color: #000;
+    overflow: hidden;
+}
+
+.scene-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* 场景容器 */
+.scene-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+/* 单个场景 */
+.scene {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* 场景切换 */
+.scene-container #scene1 {
+    display: block;
+}
+
+.scene:target {
+    display: block;
+    z-index: 2;
+}
+
+.scene:not(:target) {
+    display: none;
+    z-index: 1;
+}
+
+.scene-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* ==================== 对话框系统 ==================== */
+.dialogue-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 25;
+    min-height: 180px;
+}
+
+/* 旁白对话框 */
+.narration-box {
+    background-color: rgba(0, 0, 0, 0.85);
+    padding: 20px;
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.narration-box .dialog-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: #4ecdc4;
+    font-weight: bold;
+}
+
+.narration-box .narration-text {
+    color: #fff;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    min-height: 60px;
+}
+
+.narration-box .dialog-options {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* 人物对话框 */
+.character-box {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    background-color: transparent;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.character-box .character-content {
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0.85);
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* 人物头像和立绘 */
+.character-box .character-avatar {
+    width: 250px;
+    height: 600px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+    overflow: visible;
+}
+
+.character-box .character-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    object-position: bottom;
+}
+
+/* 对话框通用样式 */
+.dialog-title {
+    color: #ff6b6b;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 对话框中的点击提示 */
+.dialog-hint {
+	margin-top: 10px;
+	text-align: right;
+	padding: 5px 0;
+	color: #4ecdc4;
+	font-size: 14px;
+	font-style: italic;
+	opacity: 0.9;
+	display: block;
+}
+/* 场景结束的特殊提示样式 */
+.special-hint {
+	margin-top: 15px;
+	text-align: center;
+	padding: 8px;
+	color: #ffcc00;
+	font-size: 14px;
+	font-weight: bold;
+	background-color: rgba(0, 0, 0, 0.5);
+	border-radius: 4px;
+	border: 1px solid #ffcc00;
+	display: block;
+}
+.title-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-color: #4ecdc4;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+}
+
+.character-name {
+    font-weight: bold;
+}
+
+.dialog-text {
+    color: #fff;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    min-height: 60px;
+}
+
+.dialog-options {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dialog-options button {
+    background-color: #463BAB;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.dialog-options button:hover {
+    background-color: #5a4fcc;
+}
+
+/* ==================== 物品栏 ==================== */
+.inventory-area {
+    position: absolute;
+    top: 100px;
+    right: 20px;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid #4ecdc4;
+    border-radius: 5px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+
+.inventory-item {
+	display: block !important;  
+	width: 60px;
+	height: 60px;
+	margin: 5px auto; 
+	cursor: pointer;
+	padding: 3px;
+	border: 2px solid transparent;
+	border-radius: 6px;
+	transition: all 0.2s ease;
+}
+
+.inventory-item.selected {
+    border: 3px solid #ffcc00;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.8);
+    transform: scale(1.05);
+}
+
+.inventory-item:hover {
+    opacity: 0.8;
+}
+
+.inventory-item img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+.inventory-placeholder {
+    color: #888;
+    font-size: 12px;
+    padding: 10px;
+    text-align: center;
+}
+
+/* 获得物品按钮样式 */
+.item-get-button {
+	background-color: #ffcc00;
+	color: #333;
+	border: none;
+	padding: 8px 16px;
+	border-radius: 4px;
+	cursor: pointer;
+	margin-top: 10px;
+	font-weight: bold;
+}
+
+.item-get-button:hover {
+	background-color: #ffd633;
+}
+/* 物品放大展示层 */
+.item-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 83%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 100;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.item-overlay.active {
+	display: flex;
+}
+
+.item-overlay-content {
+	position: relative;
+	max-width: 80%;
+	max-height: 80%;
+}
+
+.item-overlay-content img {
+	max-width: 100%;
+	max-height: 60vh;
+	border: 2px solid #fff;
+	border-radius: 5px;
+}
+
+.close-item {
+	position: absolute;
+	top: -20px;
+	right: -20px;
+	width: 40px;
+	height: 40px;
+	cursor: pointer;
+}
+
+.close-item img {
+	width: 100%;
+	height: 100%;
+	border: none;
+	border-radius: 50%;
+}
+@keyframes pulseRingRed {
+	0% {
+		transform: translate(-50%, -50%) scale(0.8);
+		opacity: 0;
+	}
+	50% {
+		transform: translate(-50%, -50%) scale(1.2);
+		opacity: 1;
+	}
+	100% {
+		transform: translate(-50%, -50%) scale(1.5);
+		opacity: 0;
+	}
+}
+
+/* 红圈指示 - 统一尺寸 */
+.hint-circle {
+	position: absolute;
+	width: 70px;
+	height: 70px;
+	border: 3px solid rgba(255, 60, 60, 0.9);
+	border-radius: 50%;
+	z-index: 40;
+	pointer-events: auto;
+	opacity: 0;
+	display: none;
+	cursor: pointer;
+	transform: translate(-50%, -50%);
+	transition: opacity 0.3s ease;
+}
+
+/* 红圈动画效果 */
+.hint-circle.active {
+	opacity: 0.9;
+	animation: pulseRingRed 2s ease-in-out infinite;
+}
+/* ==================== 右侧直播区 ==================== */
+.live-area {
+    flex: 1;
+    max-width: 280px;
+    background-color: #2c2c2c;
+    display: flex;
+    flex-direction: column;
+}
+
+.live-header {
+    padding: 15px;
+    border-bottom: 1px solid #444;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.live-title {
+    color: #ff6b6b;
+}
+
+.viewer-count {
+    color: #4ecdc4;
+    font-size: 14px;
+}
+
+.comment-area {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.comment {
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: #3a3a3a;
+    border-radius: 4px;
+}
+
+.comment-user {
+    color: #4ecdc4;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.comment.pop-in {
+    animation: popIn 0.5s ease forwards;
+    transform: translateY(20px);
+    opacity: 0;
+}
+
+.comment-input {
+    padding: 15px;
+    border-top: 1px solid #444;
+}
+
+.comment-input input {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    background-color: #444;
+    color: #fff;
+}
+
+/* ==================== 导航链接 ==================== */
+.map-link {
+    display: inline-block;
+    padding: 5px 10px;
+    border: 2px solid #fff;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    background-color: rgba(0,0,0,0.5);
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+}
+
+.map-link:hover {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+}
+
+.scene-link {
+    display: inline-block;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    width: 60px;
+    height: 60px;
+    background-image: url('../res/arrow.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    transition: transform 0.3s;
+    text-decoration: none;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    opacity: 0.9;
+}
+
+.scene-link:hover {
+    transform: scale(1.1);
+    background-color: transparent;
+    opacity: 1;
+}
+
+/* ==================== 动画 ==================== */
+@keyframes popIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ==================== 工具类 ==================== */
+.hidden {
+    display: none !important;
+}
+
+.permanent-hidden {
+    display: none !important;
+}
+
+/* ==================== 场景背景填充 ==================== */
+.scene:target .scene-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
